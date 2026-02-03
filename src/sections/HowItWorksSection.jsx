@@ -21,6 +21,25 @@ const HowItWorksSection = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {HOW_IT_WORKS.map((step, index) => {
+            return (
+              <div
+                key={step.step}
+                className="relative bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#F05537] text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  {step.step}
+                </div>
+
+                <h3 className="text-xl font-semibold text-[#1E0A3C] mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-[#6F7287]">
+                  {step.description}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
