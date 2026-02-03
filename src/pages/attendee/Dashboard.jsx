@@ -96,3 +96,26 @@ const AttendeeDashboard = () => {
 
     fetchDashboardData();
   }, [token]);
+
+   // Get recent upcoming tickets (first 3)
+  const recentTickets = tickets
+    .filter(t => {
+      const eventDate = t.event ? new Date(t.event.start_date) : null;
+      return eventDate && eventDate >= new Date() && t.payment_status === 'completed';
+    })
+    .sort((a, b) => new Date(a.event?.start_date) - new Date(b.event?.start_date))
+    .slice(0, 3);
+
+  // Get recent saved events (first 2)
+  const recentSavedEvents = savedEvents.slice(0, 2);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F7FA] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#F05537]" />
+          <span className="text-[#6F7287]">Loading your dashboard...</span>
+        </div>
+      </div>
+    );
+  }
