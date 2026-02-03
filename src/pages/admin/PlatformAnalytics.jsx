@@ -70,6 +70,7 @@ const PlatformAnalytics = () => {
 
         <h1 className="text-2xl font-bold text-[#1E0A3C] mb-6">Platform Analytics</h1>
 
+        {/* Overview Stats */}
         {analytics && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -114,6 +115,42 @@ const PlatformAnalytics = () => {
                 <p className="text-sm text-[#6F7287]">Tickets Sold</p>
               </div>
               <p className="text-2xl font-bold text-[#1E0A3C]">{analytics.overview.completed_tickets?.toLocaleString() || 0}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Monthly Revenue */}
+        {analytics && analytics.monthly_revenue && (
+          <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-[#1E0A3C]">Monthly Revenue</h2>
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                className="px-3 py-2 border border-[#D2D2D6] rounded-lg text-sm"
+              >
+                <option value="6m">Last 6 months</option>
+                <option value="1y">Last year</option>
+                <option value="all">All time</option>
+              </select>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#E6E5E8]">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-[#6F7287]">Month</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-[#6F7287]">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.monthly_revenue.map((month) => (
+                    <tr key={month.month} className="border-b border-[#E6E5E8] last:border-0">
+                      <td className="py-3 px-4 text-[#39364F] font-medium">{month.month}</td>
+                      <td className="py-3 px-4 text-right font-medium text-[#F05537]">{formatCurrency(month.revenue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
