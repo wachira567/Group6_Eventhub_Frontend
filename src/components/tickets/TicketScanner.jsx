@@ -25,33 +25,58 @@ const TicketScanner = ({ eventId, eventTitle }) => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (eventId) {
-      fetchStats();
-    }
+    if (eventId) fetchStats();
   }, [eventId]);
 
   const fetchStats = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/tickets/verification-stats/${eventId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
-
       if (response.ok) {
         const data = await response.json();
         setStats(data.stats);
       }
+    } catch (err) { console.error('Error fetching stats:', err); }
+  };
+
+  const verifyTicket = async (ticketIdentifier, isQrData = false) => {
+    setLoading(true);
+    setError(null);
+    setVerificationResult(null);
+
+    try {
+      let response;
+      if (isQrData) {
+        response = await fetch(`${API_BASE_URL}/tickets/scan`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ qr_data: ticketIdentifier, mark_as_used: true }),
+        });
+      } else {
+        response = await fetch(`${API_BASE_URL}/tickets/verify/${ticketIdentifier}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+      }
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || data.message || 'Verification failed');
+
+      setVerificationResult({ success: data.valid, ...data });
+      if (data.valid) setRecentVerifications(prev => [data.ticket, ...prev].slice(0, 10));
+      fetchStats();
     } catch (err) {
-      console.error('Error fetching stats:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="text-sm text-gray-500">Scanner for: {eventTitle}</div>
-    </div>
-  );
+  return <div className="space-y-6"></div>;
 };
 
 export default TicketScanner;
