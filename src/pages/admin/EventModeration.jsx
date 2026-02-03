@@ -46,6 +46,48 @@ const EventModeration = () => {
     fetchPendingEvents();
   }, []);
 
+  const handleApprove = async (eventId) => {
+    setActionLoading(eventId);
+    try {
+      const response = await fetch(`${API_BASE_URL}/moderation/events/${eventId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to approve event');
+      await fetchPendingEvents();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (eventId) => {
+    const reason = prompt('Please provide a reason for rejection (optional):');
+    if (reason === null) return;
+
+    setActionLoading(eventId);
+    try {
+      const response = await fetch(`${API_BASE_URL}/moderation/events/${eventId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reason }),
+      });
+      if (!response.ok) throw new Error('Failed to reject event');
+      await fetchPendingEvents();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   return <div>Event Moderation Component</div>;
 };
 
