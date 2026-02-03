@@ -22,6 +22,7 @@ const HowItWorksSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {HOW_IT_WORKS.map((step, index) => {
+            const IconComponent = iconMap[step.icon];
             return (
               <div
                 key={step.step}
@@ -31,12 +32,22 @@ const HowItWorksSection = () => {
                   {step.step}
                 </div>
 
+                <div className="w-16 h-16 bg-[#FFF5F3] rounded-full flex items-center justify-center mx-auto mb-6">
+                  {IconComponent && (
+                    <IconComponent className="w-8 h-8 text-[#F05537]" />
+                  )}
+                </div>
+
                 <h3 className="text-xl font-semibold text-[#1E0A3C] mb-3">
                   {step.title}
                 </h3>
                 <p className="text-[#6F7287]">
                   {step.description}
                 </p>
+
+                {index < HOW_IT_WORKS.length - 1 && (
+                  <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-[#E6E5E8]" />
+                )}
               </div>
             );
           })}
