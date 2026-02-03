@@ -26,3 +26,39 @@ const AttendeeDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+   useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!token) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch user's tickets
+        const ticketsRes = await fetch(`${API_BASE_URL}/tickets/my-tickets`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        let ticketsData = [];
+        if (ticketsRes.ok) {
+          const ticketsJson = await ticketsRes.json();
+          ticketsData = ticketsJson.tickets || [];
+          setTickets(ticketsData);
+        }
+
+        // Fetch saved events
+        const savedRes = await fetch(`${API_BASE_URL}/events/saved`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        let savedData = [];
+        if (savedRes.ok) {
+          const savedJson = await savedRes.json();
+          savedData = savedJson.events || [];
+          setSavedEvents(savedData);
+        }
