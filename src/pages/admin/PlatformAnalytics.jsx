@@ -49,6 +49,14 @@ const PlatformAnalytics = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-red-700">
+        Error loading analytics: {error}
+      </div>
+    );
+  }
+
   return <div>Platform Analytics Component</div>;
 };
 
