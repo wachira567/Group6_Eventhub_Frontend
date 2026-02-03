@@ -7,13 +7,6 @@ const UserManagement = () => {
     { id: 1, name: "John Doe", email: "john@example.com", role: "User" },
     { id: 2, name: "Jane Admin", email: "jane@example.com", role: "Admin" },
   ]);
-  const [loading] = useState(false);
-
-  if (loading) {
-    return (
-      <div className="p-6 text-center text-gray-600">Loading users…</div>
-    );
-  }
 
   return (
     <div className="p-6">
@@ -35,32 +28,40 @@ const UserManagement = () => {
         </button>
       </div>
 
-      {users.length === 0 ? (
-        <div className="text-center text-gray-500">
-          No users found.
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow">
-          <table className="w-full text-sm">
-            <thead className="border-b">
-              <tr>
-                <th className="p-4 text-left">Name</th>
-                <th className="p-4 text-left">Email</th>
-                <th className="p-4 text-left">Role</th>
+      <div className="bg-white rounded-lg shadow">
+        <table className="w-full text-sm">
+          <thead className="border-b">
+            <tr>
+              <th className="p-4 text-left">Name</th>
+              <th className="p-4 text-left">Email</th>
+              <th className="p-4 text-left">Role</th>
+              <th className="p-4 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id} className="border-b last:border-b-0">
+                <td className="p-4">{user.name}</td>
+                <td className="p-4">{user.email}</td>
+                <td className="p-4">
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    user.role === "Admin"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <button className="text-sm text-blue-600 hover:underline">
+                    View
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b last:border-b-0">
-                  <td className="p-4">{user.name}</td>
-                  <td className="p-4">{user.email}</td>
-                  <td className="p-4">{user.role}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
