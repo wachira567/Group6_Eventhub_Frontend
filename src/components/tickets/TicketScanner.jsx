@@ -139,4 +139,57 @@ const TicketScanner = ({ eventId, eventTitle }) => {
   );
 };
 
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Section (same as Part 5) */}
+      {stats && (
+        <Card>
+          <CardHeader className="cursor-pointer" onClick={() => setShowStats(!showStats)}>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="w-5 h-5 text-[#F05537]" /> Check-in Statistics
+              </CardTitle>
+              {showStats ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
+          </CardHeader>
+          {showStats && (
+            <CardContent>
+              {/* Stat Boxes & Progress Bar (see Part 5) */}
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      {/* Verification Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ScanLine className="w-5 h-5 text-[#F05537]" /> Verify Ticket
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 mb-6">
+            <Button
+              variant={scanMode === 'manual' ? 'default' : 'outline'}
+              onClick={() => setScanMode('manual')}
+              className={scanMode === 'manual' ? 'bg-[#F05537] hover:bg-[#D94E32]' : ''}
+            >
+              <Search className="w-4 h-4 mr-2" /> Manual Entry
+            </Button>
+            <Button
+              variant={scanMode === 'camera' ? 'default' : 'outline'}
+              onClick={() => setScanMode('camera')}
+              className={scanMode === 'camera' ? 'bg-[#F05537] hover:bg-[#D94E32]' : ''}
+            >
+              <QrCode className="w-4 h-4 mr-2" /> QR Data
+            </Button>
+          </div>
+          
+          {/* Content for Forms will go here */}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
 export default TicketScanner;
