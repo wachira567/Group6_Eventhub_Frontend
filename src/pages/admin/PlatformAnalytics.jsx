@@ -70,31 +70,36 @@ const PlatformAnalytics = () => {
 
         <h1 className="text-2xl font-bold text-[#1E0A3C] mb-6">Platform Analytics</h1>
 
-        {/* Overview Stats */}
-        {/* ...Overview Stats & Monthly Revenue (Commits 1–5) */}
+        {/* Overview Stats & Monthly Revenue (Commits 1–5) */}
 
         {/* Two Column Layout */}
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Events by Category */}
-          {analytics && analytics.events_by_category && (
+          {/* Events by Category (Commit 6) */}
+
+          {/* Top Events */}
+          {analytics && analytics.top_events && (
             <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#1E0A3C] mb-4">Events by Category</h2>
+              <h2 className="text-lg font-semibold text-[#1E0A3C] mb-4">Top Events by Tickets</h2>
               <div className="space-y-4">
-                {Object.entries(analytics.events_by_category).map(([category, count]) => (
-                  <div key={category} className="flex items-center justify-between p-4 bg-[#F8F7FA] rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[#F05537]/10 rounded-full flex items-center justify-center">
-                        <BarChart3 className="w-5 h-5 text-[#F05537]" />
+                {analytics.top_events.length > 0 ? (
+                  analytics.top_events.map((event, index) => (
+                    <div key={event.id} className="flex items-center justify-between p-4 bg-[#F8F7FA] rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <span className="w-8 h-8 bg-[#F05537] text-white rounded-full flex items-center justify-center font-bold">
+                          {index + 1}
+                        </span>
+                        <div>
+                          <p className="font-medium text-[#39364F]">{event.title}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-[#39364F]">{category}</p>
+                      <div className="text-right">
+                        <p className="font-semibold text-[#F05537]">{event.tickets} tickets</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-[#1E0A3C]">{count} events</p>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-[#6F7287] text-center py-4">No event data available</p>
+                )}
               </div>
             </div>
           )}
