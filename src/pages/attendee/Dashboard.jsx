@@ -62,3 +62,37 @@ const AttendeeDashboard = () => {
           savedData = savedJson.events || [];
           setSavedEvents(savedData);
         }
+
+                // Calculate stats
+        const now = new Date();
+        const upcomingTickets = ticketsData.filter(t => {
+          const eventDate = t.event ? new Date(t.event.start_date) : null;
+          return eventDate && eventDate >= now && t.payment_status === 'completed';
+        });
+
+        const pastTickets = ticketsData.filter(t => {
+          const eventDate = t.event ? new Date(t.event.start_date) : null;
+          return eventDate && eventDate < now && t.payment_status === 'completed';
+        });
+
+        const totalSpent = ticketsData
+          .filter(t => t.payment_status === 'completed')
+          .reduce((sum, t) => sum + (t.total_price || 0), 0);
+
+        setStats({
+          upcoming: upcomingTickets.length,
+          past: pastTickets.length,
+          saved: savedData.length,
+          totalSpent,
+        });
+
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [token]);
