@@ -17,6 +17,33 @@ const CTASection = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-6">
+              Ready to host your own{' '}
+              <span className="text-[#F05537]">amazing event?</span>
+            </h2>
+            <p className="text-lg text-white/80 mb-8">
+              Join thousands of event organizers who trust EventHub to sell tickets, 
+              manage attendees, and grow their events. From small meetups to large concerts, 
+              we have got you covered.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                onClick={() => navigate('/create-event')}
+                className="bg-[#F05537] hover:bg-[#D94E32] text-white px-8 py-6 h-auto text-lg font-semibold"
+              >
+                Create Event
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/events')}
+                className="border-white text-white hover:bg-white/10 px-8 py-6 h-auto text-lg"
+              >
+                Browse Events
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
