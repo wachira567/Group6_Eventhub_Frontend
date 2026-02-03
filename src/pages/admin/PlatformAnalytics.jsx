@@ -38,6 +38,17 @@ const PlatformAnalytics = () => {
     fetchAnalytics();
   }, [token]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F7FA] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#F05537]" />
+          <span className="text-[#6F7287]">Loading analytics...</span>
+        </div>
+      </div>
+    );
+  }
+
   return <div>Platform Analytics Component</div>;
 };
 
