@@ -186,7 +186,52 @@ const TicketScanner = ({ eventId, eventTitle }) => {
             </Button>
           </div>
           
-          {/* Content for Forms will go here */}
+        
+
+          {scanMode === 'manual' && (
+            <form onSubmit={handleManualVerify} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="ticket-number">Ticket Number</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="ticket-number"
+                    placeholder="e.g., TKT-A1B2C3D4"
+                    value={ticketNumber}
+                    onChange={(e) => setTicketNumber(e.target.value.toUpperCase())}
+                    className="flex-1"
+                  />
+                  <Button type="submit" disabled={loading} className="bg-[#F05537] hover:bg-[#D94E32]">
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          )}
+
+          {scanMode === 'camera' && (
+            <form onSubmit={handleQrVerify} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="qr-data">QR Code Data</Label>
+                <textarea
+                  id="qr-data"
+                  placeholder="Paste scanned QR code data here..."
+                  value={qrData}
+                  onChange={(e) => setQrData(e.target.value)}
+                  className="w-full min-h-[100px] p-3 border rounded-md font-mono text-sm"
+                />
+              </div>
+              <div className="flex gap-2">
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="flex-1">
+                  Upload QR Image
+                </Button>
+                <Button type="submit" disabled={loading} className="flex-1 bg-[#F05537] hover:bg-[#D94E32]">
+                  {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ScanLine className="w-4 h-4 mr-2" />}
+                  Verify QR
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>
