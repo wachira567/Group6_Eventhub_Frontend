@@ -1,3 +1,4 @@
+// (Keep all previous imports)
 import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { 
@@ -12,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { API_BASE_URL } from '@/utils/constants';
 
 const TicketScanner = ({ eventId, eventTitle }) => {
+  // (Keep all states and verifyTicket from Part 3)
   const { token } = useSelector((state) => state.auth);
   const [scanMode, setScanMode] = useState('manual');
   const [loading, setLoading] = useState(false);
@@ -24,9 +26,7 @@ const TicketScanner = ({ eventId, eventTitle }) => {
   const [recentVerifications, setRecentVerifications] = useState([]);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    if (eventId) fetchStats();
-  }, [eventId]);
+  useEffect(() => { if (eventId) fetchStats(); }, [eventId]);
 
   const fetchStats = async () => {
     try {
@@ -41,19 +41,13 @@ const TicketScanner = ({ eventId, eventTitle }) => {
   };
 
   const verifyTicket = async (ticketIdentifier, isQrData = false) => {
-    setLoading(true);
-    setError(null);
-    setVerificationResult(null);
-
+    setLoading(true); setError(null); setVerificationResult(null);
     try {
       let response;
       if (isQrData) {
         response = await fetch(`${API_BASE_URL}/tickets/scan`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ qr_data: ticketIdentifier, mark_as_used: true }),
         });
       } else {
@@ -62,18 +56,39 @@ const TicketScanner = ({ eventId, eventTitle }) => {
           headers: { 'Authorization': `Bearer ${token}` },
         });
       }
-
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || data.message || 'Verification failed');
-
       setVerificationResult({ success: data.valid, ...data });
       if (data.valid) setRecentVerifications(prev => [data.ticket, ...prev].slice(0, 10));
       fetchStats();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    } catch (err) { setError(err.message); } finally { setLoading(false); }
+  };
+
+  // NEW HANDLERS
+  const handleManualVerify = async (e) => {
+    e.preventDefault();
+    if (!ticketNumber.trim()) { setError('Please enter a ticket number'); return; }
+    await verifyTicket(ticketNumber.trim());
+  };
+
+  const handleQrVerify = async (e) => {
+    e.preventDefault();
+    if (!qrData.trim()) { setError('Please enter QR code data'); return; }
+    await verifyTicket(qrData.trim(), true);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setError('File upload scanning requires a QR code decoding library. Please use manual entry or paste QR data.');
     }
+  };
+
+  const resetVerification = () => {
+    setVerificationResult(null);
+    setError(null);
+    setTicketNumber('');
+    setQrData('');
   };
 
   return <div className="space-y-6"></div>;
