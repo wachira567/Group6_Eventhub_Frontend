@@ -13,10 +13,16 @@ const CTASection = () => {
 
   return (
     <section className="relative py-16 lg:py-24 overflow-hidden">
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#1E0A3C] to-[#39364F]" />
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-[#F05537] rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#F05537] rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Content */}
           <div>
             <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-6">
               Ready to host your own{' '}
@@ -43,6 +49,22 @@ const CTASection = () => {
                 Browse Events
               </Button>
             </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-6">
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center"
+              >
+                <stat.icon className="w-8 h-8 text-[#F05537] mx-auto mb-4" />
+                <p className="text-2xl lg:text-3xl font-bold text-white mb-1">
+                  {stat.value}
+                </p>
+                <p className="text-white/60 text-sm">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
