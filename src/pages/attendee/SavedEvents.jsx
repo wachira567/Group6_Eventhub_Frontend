@@ -20,3 +20,53 @@ const SavedEvents = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [removingId, setRemovingId] = useState(null);
 
+  useEffect(() => {
+    const fetchSavedEvents = async () => {
+      if (!token) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`${API_BASE_URL}/events/saved`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch saved events');
+        }
+
+        const data = await response.json();
+        setSavedEvents(data.events || []);
+      } catch (err) {
+        console.error('Error fetching saved events:', err);
+        setError('Failed to load your saved events. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSavedEvents();
+  }, [token]);
+
+  const removeSaved = async (eventId) => {
+    if (!token) return;
+
+    try {
+      setRemovingId(eventId);
+
+      const response = await fetch(`${API_BASE_URL}/events/${eventId}/save`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove saved event');
+      }
+
+
