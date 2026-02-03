@@ -79,4 +79,22 @@ const SavedEvents = () => {
     }
   };
 
+   const filteredEvents = savedEvents.filter(
+    (event) =>
+      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F7FA] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#F05537]" />
+          <span className="text-[#6F7287]">Loading your saved events...</span>
+        </div>
+      </div>
+    );
+  }
+
 
