@@ -21,3 +21,34 @@ const MyTickets = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [downloadingId, setDownloadingId] = useState(null);
 
+  useEffect(() => {
+    const fetchTickets = async () => {
+      if (!token) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`${API_BASE_URL}/tickets/my-tickets`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch tickets');
+        }
+
+        const data = await response.json();
+        setTickets(data.tickets || []);
+      } catch (err) {
+        console.error('Error fetching tickets:', err);
+        setError('Failed to load your tickets. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, [token]);
+
