@@ -8,6 +8,7 @@ import {
   Shield,
   Activity,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../utils/constants';
 
 const sidebarItems = [
   { to: '/admin', icon: Activity, label: 'Overview', active: true },
@@ -19,6 +20,43 @@ const sidebarItems = [
 
 const AdminDashboard = () => {
   const { user, token } = useSelector((state) => state.auth);
+
+  const [stats, setStats] = useState(null);
+  const [recentEvents, setRecentEvents] = useState([]);
+  const [recentUsers, setRecentUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(`${API_BASE_URL}/analytics/platform`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch analytics');
+
+        const data = await response.json();
+
+        setStats({
+          totalUsers: data.overview.total_users,
+          totalEvents: data.overview.total_events,
+          activeEvents: data.overview.published_events,
+          pendingEvents: data.overview.pending_events,
+          totalRevenue: data.overview.revenue,
+          completedTickets: data.overview.completed_tickets,
+        });
+      } catch (err) {
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) fetchDashboardData();
+  }, [token]);
 
   return (
     <div className="min-h-screen bg-[#F8F7FA]">
