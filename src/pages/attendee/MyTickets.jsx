@@ -84,3 +84,32 @@ const MyTickets = () => {
     }
   };
 
+    // Filter tickets by status and search query
+  const now = new Date();
+  const filteredTickets = tickets.filter((ticket) => {
+    const eventDate = ticket.event ? new Date(ticket.event.start_date) : null;
+    // Check payment_status - handle both string and enum object formats
+    const isPaid = ticket.payment_status === 'completed' || ticket.payment_status === 'COMPLETED';
+    const isUpcoming = eventDate && eventDate >= now && isPaid;
+    const isPast = eventDate && eventDate < now && isPaid;
+
+    const matchesTab = activeTab === 'upcoming' ? isUpcoming : isPast;
+    const matchesSearch = searchQuery === '' || 
+      (ticket.event?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       ticket.event?.location?.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    return matchesTab && matchesSearch;
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F7FA] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#F05537]" />
+          <span className="text-[#6F7287]">Loading your tickets...</span>
+        </div>
+      </div>
+    );
+  }
+
+
