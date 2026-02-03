@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Shield,
   Activity,
+  Loader2,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../utils/constants';
 
@@ -22,8 +23,6 @@ const AdminDashboard = () => {
   const { user, token } = useSelector((state) => state.auth);
 
   const [stats, setStats] = useState(null);
-  const [recentEvents, setRecentEvents] = useState([]);
-  const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -58,8 +57,24 @@ const AdminDashboard = () => {
     if (token) fetchDashboardData();
   }, [token]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F7FA] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#F05537]" />
+          <span>Loading dashboard...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F8F7FA]">
+      {error && (
+        <div className="bg-red-50 text-red-700 p-4 m-6 rounded">
+          {error}
+        </div>
+      )}
       <h1 className="text-2xl font-bold p-6">Admin Dashboard</h1>
     </div>
   );
