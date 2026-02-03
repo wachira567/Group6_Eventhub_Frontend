@@ -11,3 +11,12 @@ const sidebarItems = [
   { to: '/attendee/tickets', icon: Ticket, label: 'My Tickets', active: false },
   { to: '/attendee/saved', icon: Heart, label: 'Saved Events', active: true },
 ];
+
+const SavedEvents = () => {
+  const { user, token } = useSelector((state) => state.auth);
+  const [savedEvents, setSavedEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [removingId, setRemovingId] = useState(null);
+
