@@ -69,4 +69,14 @@ const SavedEvents = () => {
         throw new Error('Failed to remove saved event');
       }
 
+            // Remove from local state
+      setSavedEvents(savedEvents.filter((event) => event.id !== eventId));
+    } catch (err) {
+      console.error('Error removing saved event:', err);
+      alert('Failed to remove event. Please try again.');
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
 
