@@ -28,16 +28,19 @@ const HowItWorksSection = () => {
                 key={step.step}
                 className="relative bg-white rounded-2xl p-8 text-center shadow-sm hover:shadow-md transition-shadow"
               >
+                {/* Step Number */}
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#F05537] text-white rounded-full flex items-center justify-center font-bold text-sm">
                   {step.step}
                 </div>
 
+                {/* Icon */}
                 <div className="w-16 h-16 bg-[#FFF5F3] rounded-full flex items-center justify-center mx-auto mb-6">
                   {IconComponent && (
                     <IconComponent className="w-8 h-8 text-[#F05537]" />
                   )}
                 </div>
 
+                {/* Content */}
                 <h3 className="text-xl font-semibold text-[#1E0A3C] mb-3">
                   {step.title}
                 </h3>
@@ -45,12 +48,28 @@ const HowItWorksSection = () => {
                   {step.description}
                 </p>
 
+                {/* Connector Line (not for last item) */}
                 {index < HOW_IT_WORKS.length - 1 && (
                   <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-[#E6E5E8]" />
                 )}
               </div>
             );
           })}
+        </div>
+
+        {/* Trust Badges */}
+        <div className="mt-12 flex flex-wrap justify-center gap-6">
+          {[
+            'Secure MPESA Payments',
+            'Instant Ticket Delivery',
+            '24/7 Customer Support',
+            'Verified Events',
+          ].map((badge) => (
+            <div key={badge} className="flex items-center gap-2 text-[#6F7287]">
+              <Check className="w-5 h-5 text-[#00A600]" />
+              <span className="text-sm">{badge}</span>
+            </div>
+          ))}
         </div>
       </div>
     </section>
