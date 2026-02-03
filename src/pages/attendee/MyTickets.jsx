@@ -52,3 +52,35 @@ const MyTickets = () => {
     fetchTickets();
   }, [token]);
 
+  const handleDownload = async (ticketId) => {
+    if (!token) return;
+
+    try {
+      setDownloadingId(ticketId);
+      const response = await fetch(`${API_BASE_URL}/tickets/download/${ticketId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download ticket');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `EventHub_Ticket_${ticketId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error downloading ticket:', err);
+      alert('Failed to download ticket. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
