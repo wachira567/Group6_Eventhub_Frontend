@@ -12,3 +12,17 @@ const sidebarItems = [
   { to: '/attendee/saved', icon: Heart, label: 'Saved Events' },
   { to: '/attendee/settings', icon: Settings, label: 'Settings' },
 ];
+
+const AttendeeDashboard = () => {
+  const location = useLocation();
+  const { user, token } = useSelector((state) => state.auth);
+  const [tickets, setTickets] = useState([]);
+  const [savedEvents, setSavedEvents] = useState([]);
+  const [stats, setStats] = useState({
+    upcoming: 0,
+    past: 0,
+    saved: 0,
+    totalSpent: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
