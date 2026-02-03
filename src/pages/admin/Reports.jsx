@@ -12,6 +12,7 @@ import {
   Loader2,
   Download,
   Filter,
+  X,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { API_BASE_URL } from '../../utils/constants';
@@ -34,6 +35,7 @@ const Reports = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [format, setFormat] = useState('pdf');
+  const [submitting, setSubmitting] = useState(false);
 
   const generatedReports = [
     { id: 1, name: 'Platform Overview', type: 'overview', date: '2024-01-12', format: 'PDF' },
@@ -45,6 +47,30 @@ const Reports = () => {
     typeFilter === 'all'
       ? generatedReports
       : generatedReports.filter((r) => r.type === typeFilter);
+
+  const handleGenerateReport = async () => {
+    try {
+      setSubmitting(true);
+      await fetch(`${API_BASE_URL}/reports/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          type: reportType,
+          start_date: startDate,
+          end_date: endDate,
+          format,
+        }),
+      });
+      setShowGenerateModal(false);
+    } catch (err) {
+      alert('Failed to generate report');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleDownloadCSV = async (exportType) => {
     try {
@@ -69,7 +95,7 @@ const Reports = () => {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch {
       alert('Failed to export CSV');
     } finally {
       setGenerating(null);
@@ -91,7 +117,6 @@ const Reports = () => {
           </Button>
         </div>
 
-        {/* Report templates */}
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           {reportTemplates.map((t) => (
             <button
@@ -111,7 +136,6 @@ const Reports = () => {
           ))}
         </div>
 
-        {/* Quick CSV export */}
         <div className="bg-white rounded-xl shadow-sm mb-8 p-6 grid md:grid-cols-3 gap-4">
           {['users', 'events', 'tickets'].map((type) => (
             <button
@@ -127,7 +151,6 @@ const Reports = () => {
           ))}
         </div>
 
-        {/* Generated reports history */}
         <div className="bg-white rounded-xl shadow-sm">
           <div className="p-6 border-b flex justify-between items-center">
             <h2 className="text-lg font-semibold">Generated Reports</h2>
@@ -163,6 +186,39 @@ const Reports = () => {
           </div>
         </div>
       </div>
+
+      {showGenerateModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Generate Report</h3>
+              <button onClick={() => setShowGenerateModal(false)}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <select value={reportType} onChange={(e) => setReportType(e.target.value)} className="w-full border rounded px-3 py-2">
+                {reportTemplates.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full border rounded px-3 py-2" />
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full border rounded px-3 py-2" />
+
+              <select value={format} onChange={(e) => setFormat(e.target.value)} className="w-full border rounded px-3 py-2">
+                <option value="pdf">PDF</option>
+                <option value="csv">CSV</option>
+              </select>
+
+              <Button onClick={handleGenerateReport} className="w-full bg-[#F05537]" disabled={submitting}>
+                {submitting ? 'Generating...' : 'Generate'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
