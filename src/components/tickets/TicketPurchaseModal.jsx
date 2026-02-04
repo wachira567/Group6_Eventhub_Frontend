@@ -60,3 +60,12 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
       return () => clearTimeout(timer);
     }
   }, [step, countdown]);
+
+   const handleQuantityChange = (delta) => {
+    const newQuantity = quantity + delta;
+    const maxAvailable = selectedTicketType?.available || 10;
+    if (newQuantity >= 1 && newQuantity <= Math.min(10, maxAvailable)) {
+      setQuantity(newQuantity);
+    }
+  };
+
