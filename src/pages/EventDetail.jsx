@@ -82,3 +82,26 @@ const EventDetail = () => {
 
   // Check if event is saved (only for authenticated users)
   useEffect(() => {
+    const checkSavedStatus = async () => {
+      if (!isAuthenticated || !token || !id) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/events/saved`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const savedEventIds = (data.events || []).map(e => e.id);
+          setIsSaved(savedEventIds.includes(parseInt(id)));
+        }
+      } catch (err) {
+        console.error('Error checking saved status:', err);
+      }
+    };
+
+    checkSavedStatus();
+  }, [id, isAuthenticated, token]);
+
