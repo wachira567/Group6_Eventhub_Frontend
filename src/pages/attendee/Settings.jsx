@@ -15,3 +15,23 @@ const sidebarItems = [
   { to: '/attendee/saved', icon: Heart, label: 'Saved Events' },
   { to: '/attendee/settings', icon: Settings, label: 'Settings' },
 ];
+
+const AttendeeSettings = () => {
+  const { user, token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const location = useLocation();
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
