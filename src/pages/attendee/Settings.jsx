@@ -89,3 +89,62 @@ const AttendeeSettings = () => {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        name: formData.name,
+        phone: formData.phone,
+        current_password: formData.currentPassword,
+      };
+
+      // Only include new password if user wants to change it
+      if (formData.newPassword) {
+        payload.new_password = formData.newPassword;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile');
+      }
+
+      // Update Redux store and localStorage with new user data
+      dispatch(updateUser(data.user));
+
+      // Clear password fields
+      setFormData((prev) => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      }));
+
+      toast.success('Profile updated successfully!');
+    } catch (err) {
+      toast.error(err.message || 'Failed to update profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getActiveItem = () => {
+    return sidebarItems.find((item) => item.to === location.pathname)?.to || '/attendee';
+  };
