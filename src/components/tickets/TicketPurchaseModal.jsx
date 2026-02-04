@@ -8,3 +8,23 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatCurrency, isValidKenyanPhone, isValidEmail } from '@/utils/helpers';
 import { API_BASE_URL } from '@/utils/constants';
+
+const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
+  const navigate = useNavigate();
+  const { user, token, isAuthenticated } = useSelector((state) => state.auth);
+  
+  // State
+  const [step, setStep] = useState('selection'); // 'selection', 'details', 'payment', 'processing', 'success', 'error'
+  const [selectedTicketType, setSelectedTicketType] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [ticketId, setTicketId] = useState(null);
+  const [checkoutRequestId, setCheckoutRequestId] = useState(null);
+  const [guestToken, setGuestToken] = useState(null);
+  const [error, setError] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
+  const [countdown, setCountdown] = useState(60);
+  const [emailError, setEmailError] = useState('');
+  const [nameError, setNameError] = useState('');
