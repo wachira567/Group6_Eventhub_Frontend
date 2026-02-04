@@ -133,3 +133,18 @@ const Events = () => {
 
     fetchEvents();
   }, [searchQuery, locationFilter, categoryFilter, priceFilter]);
+
+  const updateFilter = (key, value) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set(key, value);
+    } else {
+      newParams.delete(key);
+    }
+    setSearchParams(newParams);
+  };
+
+  const clearFilters = () => {
+    setSearchParams(new URLSearchParams());
+  };
+
