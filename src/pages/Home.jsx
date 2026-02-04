@@ -8,14 +8,3 @@ import CTASection from '../sections/CTASection';
 const Home = () => {
   return (
     <div className="animate-fade-in">
-      <HeroSection />
-      <CategoriesSection />
-      <FeaturedEventsSection />
-      <PopularCitiesSection />
-      <HowItWorksSection />
-      <CTASection />
-    </div>
-  );
-};
-
-export default Home;
