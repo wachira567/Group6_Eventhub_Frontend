@@ -80,3 +80,12 @@ const AttendeeSettings = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+   const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
