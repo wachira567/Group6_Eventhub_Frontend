@@ -188,3 +188,113 @@ const EventDetail = () => {
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-[#F05537] animate-spin mx-auto mb-4" />
           <p className="text-[#6F7287]">Loading event details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#F8F7FA] flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="w-4 h-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button
+            onClick={() => navigate(-1)}
+            className="w-full bg-[#F05537] hover:bg-[#D94E32] text-white"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // No event data
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-[#F8F7FA] flex items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-[#6F7287] mb-4">Event not found</p>
+          <Button
+            onClick={() => navigate(-1)}
+            className="bg-[#F05537] hover:bg-[#D94E32] text-white"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F8F7FA]">
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-[#6F7287] hover:text-[#F05537] transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to events
+        </button>
+      </div>
+
+      {/* Hero Image */}
+      <div className="relative h-[300px] lg:h-[400px] bg-gray-100">
+        <img
+          src={event.image_url || 'https://res.cloudinary.com/dtbe44muv/image/upload/v1770062126/event-1_ivv30i.jpg'}
+          alt={event.title}
+          className="w-full h-full object-contain bg-gray-100"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl p-6 lg:p-8 shadow-sm">
+              {/* Date Badge */}
+              <div className="inline-flex items-center gap-2 bg-[#F05537]/10 text-[#F05537] px-4 py-2 rounded-full text-sm font-medium mb-4">
+                <Calendar className="w-4 h-4" />
+                {formatDate(event.start_date)}
+              </div>
+
+              {/* Title */}
+              <h1 className="text-2xl lg:text-3xl font-bold text-[#1E0A3C] mb-4">
+                {event.title}
+              </h1>
+
+              {/* Organizer */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-[#F05537] rounded-full flex items-center justify-center text-white font-semibold">
+                  {event.organizer_id ? 'O' : 'E'}
+                </div>
+                <div>
+                  <p className="text-sm text-[#6F7287]">Organized by</p>
+                  <p className="font-medium text-[#39364F]">Event Organizer</p>
+                </div>
+              </div>
+
+              {/* Event Details */}
+              <div className="grid sm:grid-cols-2 gap-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-[#F8F7FA] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 text-[#F05537]" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-[#39364F]">Time</p>
+                    <p className="text-sm text-[#6F7287]">
+                      {formatTime(event.start_date)} - {formatTime(event.end_date)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-[#F8F7FA] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-[#F05537]" />
