@@ -48,3 +48,73 @@ const Footer = () => {
             </p>
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-[#A9A8B3]">
+                <Mail className="w-5 h-5" />
+                <span>support@eventhub.co.ke</span>
+              </div>
+              <div className="flex items-center gap-3 text-[#A9A8B3]">
+                <Phone className="w-5 h-5" />
+                <span>+254 700 000 000</span>
+              </div>
+              <div className="flex items-center gap-3 text-[#A9A8B3]">
+                <MapPin className="w-5 h-5" />
+                <span>Nairobi, Kenya</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Link Columns */}
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <div key={title}>
+              <h3 className="font-semibold text-lg mb-4">{title}</h3>
+              <ul className="space-y-3">
+                {links.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      to={link.href}
+                      className="text-[#A9A8B3] hover:text-white transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-[#A9A8B3] text-sm">
+              &copy; {new Date().getFullYear()} EventHub. All rights reserved.
+            </p>
+            <div className="flex items-center gap-6">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.href}
+                  className="text-[#A9A8B3] hover:text-white transition-colors"
+                  aria-label={social.name}
+                >
+                  <social.icon className="w-5 h-5" />
+                </a>
+              ))}
+            </div>
+            <div className="flex items-center gap-6 text-sm">
+              <Link to="#" className="text-[#A9A8B3] hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
+              <Link to="#" className="text-[#A9A8B3] hover:text-white transition-colors">
+                Terms of Service
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
