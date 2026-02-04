@@ -22,3 +22,15 @@ const Events = () => {
   const priceFilter = searchParams.get('price') || '';
   const dateFilter = searchParams.get('date') || '';
 
+  const handleOpenModal = (event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  // Fetch events from API
+  useEffect(() => {
