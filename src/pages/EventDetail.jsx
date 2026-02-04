@@ -130,3 +130,41 @@ const EventDetail = () => {
     setIsModalOpen(false);
   };
 
+  const handleSave = async () => {
+    if (!isAuthenticated || !token) {
+      navigate('/login');
+      return;
+    }
+
+    // Optimistic UI update
+    const newSavedState = !isSaved;
+    setIsSaved(newSavedState);
+    setIsSaving(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/events/${id}/save`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        // Revert on error
+        setIsSaved(!newSavedState);
+        throw new Error('Failed to save event');
+      }
+
+      const data = await response.json();
+      // Sync with server response
+      setIsSaved(data.saved);
+    } catch (err) {
+      console.error('Error saving event:', err);
+      // Revert UI on error
+      setIsSaved(!newSavedState);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
