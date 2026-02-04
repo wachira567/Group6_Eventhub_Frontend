@@ -8,3 +8,10 @@ import { Label } from '../../components/ui/label';
 import { API_BASE_URL } from '../../utils/constants';
 import { updateUser } from '../../store/slices/authSlice';
 import { toast } from 'sonner';
+
+const sidebarItems = [
+  { to: '/attendee', icon: User, label: 'Overview' },
+  { to: '/attendee/tickets', icon: Ticket, label: 'My Tickets' },
+  { to: '/attendee/saved', icon: Heart, label: 'Saved Events' },
+  { to: '/attendee/settings', icon: Settings, label: 'Settings' },
+];
