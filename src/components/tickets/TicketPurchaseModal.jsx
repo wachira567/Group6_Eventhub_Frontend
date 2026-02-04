@@ -77,3 +77,13 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }
   };
 
+   const formatPhoneForDisplay = (phone) => {
+    // Remove non-digits
+    const cleaned = phone.replace(/\D/g, '');
+    // Format as 07XX XXX XXX
+    if (cleaned.length === 10 && cleaned.startsWith('07')) {
+      return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+    }
+    return phone;
+  };
+
