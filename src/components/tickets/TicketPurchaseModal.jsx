@@ -107,4 +107,14 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
       return;
     }
 
+        // If not authenticated, show details step first
+    if (!isAuthenticated) {
+      setStep('details');
+      return;
+    }
+
+    // For authenticated users, proceed directly to payment step
+    await proceedToReserve();
+  };
+
 
