@@ -8,14 +8,3 @@ const CategoriesSection = () => {
         <h2 className="text-2xl lg:text-3xl font-bold text-[#1E0A3C] mb-8 text-center">
           Explore by Category
         </h2>
-        <div className="flex flex-wrap justify-center gap-6 lg:gap-10">
-          {CATEGORIES.map((category) => (
-            <CategoryPill key={category.id} category={category} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-export default CategoriesSection;
