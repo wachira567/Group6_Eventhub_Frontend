@@ -87,3 +87,24 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     return phone;
   };
 
+   const formatPhoneForApi = (phone) => {
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.startsWith('07')) {
+      return '254' + cleaned.slice(1);
+    }
+    if (cleaned.startsWith('+')) {
+      return cleaned.slice(1);
+    }
+    return cleaned;
+  };
+
+  // Step 1: Reserve ticket
+  const handleReserveTicket = async () => {
+    setError(null);
+    
+    if (!selectedTicketType) {
+      setError('Please select a ticket type');
+      return;
+    }
+
+
