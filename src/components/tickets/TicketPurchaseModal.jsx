@@ -117,4 +117,12 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     await proceedToReserve();
   };
 
+   // Validate guest details and proceed
+  const handleGuestDetailsSubmit = async () => {
+    setError(null);
+    setEmailError('');
+    setNameError('');
+
+    let hasError = false;
+
 
