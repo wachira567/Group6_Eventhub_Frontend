@@ -39,3 +39,21 @@ const CreateEvent = () => {
     });
   };
 
+  const handleTicketChange = (index, field, value) => {
+    const newTicketTypes = [...formData.ticketTypes];
+    newTicketTypes[index][field] = value;
+    setFormData({ ...formData, ticketTypes: newTicketTypes });
+  };
+
+  const addTicketType = () => {
+    setFormData({
+      ...formData,
+      ticketTypes: [...formData.ticketTypes, { name: '', price: '', quantity: '' }],
+    });
+  };
+
+  const removeTicketType = (index) => {
+    const newTicketTypes = formData.ticketTypes.filter((_, i) => i !== index);
+    setFormData({ ...formData, ticketTypes: newTicketTypes });
+  };
+
