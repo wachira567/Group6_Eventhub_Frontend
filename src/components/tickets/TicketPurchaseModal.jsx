@@ -29,7 +29,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
   const [emailError, setEmailError] = useState('');
   const [nameError, setNameError] = useState('');
 
-    // Reset state when modal opens
+  // Reset state when modal opens
   useEffect(() => {
     if (isOpen && event?.ticketTypes?.length > 0) {
       setSelectedTicketType(event.ticketTypes[0]);
@@ -44,7 +44,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }
   }, [isOpen, event, user]);
 
-    // Cleanup polling on unmount
+  // Cleanup polling on unmount
   useEffect(() => {
     return () => {
       if (pollingInterval) {
@@ -61,7 +61,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }
   }, [step, countdown]);
 
-   const handleQuantityChange = (delta) => {
+  const handleQuantityChange = (delta) => {
     const newQuantity = quantity + delta;
     const maxAvailable = selectedTicketType?.available || 10;
     if (newQuantity >= 1 && newQuantity <= Math.min(10, maxAvailable)) {
@@ -69,7 +69,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }
   };
 
-   const handleTicketTypeSelect = (ticketType) => {
+  const handleTicketTypeSelect = (ticketType) => {
     setSelectedTicketType(ticketType);
     // Reset quantity if it exceeds available
     if (quantity > ticketType.available) {
@@ -77,7 +77,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }
   };
 
-   const formatPhoneForDisplay = (phone) => {
+  const formatPhoneForDisplay = (phone) => {
     // Remove non-digits
     const cleaned = phone.replace(/\D/g, '');
     // Format as 07XX XXX XXX
@@ -87,7 +87,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     return phone;
   };
 
-   const formatPhoneForApi = (phone) => {
+  const formatPhoneForApi = (phone) => {
     const cleaned = phone.replace(/\D/g, '');
     if (cleaned.startsWith('07')) {
       return '254' + cleaned.slice(1);
@@ -107,7 +107,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
       return;
     }
 
-        // If not authenticated, show details step first
+    // If not authenticated, show details step first
     if (!isAuthenticated) {
       setStep('details');
       return;
@@ -117,7 +117,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     await proceedToReserve();
   };
 
-   // Validate guest details and proceed
+  // Validate guest details and proceed
   const handleGuestDetailsSubmit = async () => {
     setError(null);
     setEmailError('');
@@ -125,7 +125,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
 
     let hasError = false;
 
-     // Validate email
+    // Validate email
     if (!email || !isValidEmail(email)) {
       setEmailError('Please enter a valid email address');
       hasError = true;
@@ -144,7 +144,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     await proceedToReserve();
   };
 
-   // Proceed to reserve ticket
+  // Proceed to reserve ticket
   const proceedToReserve = async () => {
     try {
       const headers = {
@@ -334,7 +334,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }, 125000);
   }, [token, guestToken, isAuthenticated, navigate, onClose]);
 
-    const handleClose = () => {
+  const handleClose = () => {
     if (pollingInterval) {
       clearInterval(pollingInterval);
       setPollingInterval(null);
@@ -390,7 +390,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
 
   if (!isOpen) return null;
 
-   return (
+  return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
@@ -991,8 +991,3 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
 };
 
 export default TicketPurchaseModal;
-
-
-
-
-

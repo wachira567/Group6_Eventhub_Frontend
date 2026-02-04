@@ -69,7 +69,7 @@ const SavedEvents = () => {
         throw new Error('Failed to remove saved event');
       }
 
-            // Remove from local state
+      // Remove from local state
       setSavedEvents(savedEvents.filter((event) => event.id !== eventId));
     } catch (err) {
       console.error('Error removing saved event:', err);
@@ -79,7 +79,7 @@ const SavedEvents = () => {
     }
   };
 
-   const filteredEvents = savedEvents.filter(
+  const filteredEvents = savedEvents.filter(
     (event) =>
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -97,7 +97,7 @@ const SavedEvents = () => {
     );
   }
 
-   return (
+  return (
     <div className="min-h-screen bg-[#F8F7FA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Link */}
@@ -271,5 +271,3 @@ const SavedEvents = () => {
 };
 
 export default SavedEvents;
-
-
