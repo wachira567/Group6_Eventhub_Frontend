@@ -27,7 +27,7 @@ const AttendeeDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchDashboardData = async () => {
       if (!token) return;
 
@@ -63,7 +63,7 @@ const AttendeeDashboard = () => {
           setSavedEvents(savedData);
         }
 
-                // Calculate stats
+        // Calculate stats
         const now = new Date();
         const upcomingTickets = ticketsData.filter(t => {
           const eventDate = t.event ? new Date(t.event.start_date) : null;
@@ -97,7 +97,7 @@ const AttendeeDashboard = () => {
     fetchDashboardData();
   }, [token]);
 
-   // Get recent upcoming tickets (first 3)
+  // Get recent upcoming tickets (first 3)
   const recentTickets = tickets
     .filter(t => {
       const eventDate = t.event ? new Date(t.event.start_date) : null;

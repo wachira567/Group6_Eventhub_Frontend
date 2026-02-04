@@ -125,7 +125,6 @@ const VerifyEmail = () => {
               </div>
             </>
           )}
-          
 
           {status === 'error' && (
             <>

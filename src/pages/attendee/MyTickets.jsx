@@ -84,7 +84,7 @@ const MyTickets = () => {
     }
   };
 
-    // Filter tickets by status and search query
+  // Filter tickets by status and search query
   const now = new Date();
   const filteredTickets = tickets.filter((ticket) => {
     const eventDate = ticket.event ? new Date(ticket.event.start_date) : null;
@@ -332,5 +332,3 @@ const MyTickets = () => {
 };
 
 export default MyTickets;
-
-
