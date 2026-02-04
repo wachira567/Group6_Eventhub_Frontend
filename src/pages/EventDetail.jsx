@@ -298,3 +298,103 @@ const EventDetail = () => {
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-[#F8F7FA] rounded-lg flex items-center justify-center flex-shrink-0">
                     <MapPin className="w-5 h-5 text-[#F05537]" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-[#39364F]">Location</p>
+                    <p className="text-sm text-[#6F7287]">{event.location}</p>
+                    <p className="text-sm text-[#A9A8B3]">{event.city}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold text-[#1E0A3C] mb-4">About this event</h2>
+                <div className="prose prose-sm max-w-none text-[#6F7287] whitespace-pre-line">
+                  {event.description || 'No description available.'}
+                </div>
+              </div>
+
+              {/* Tags */}
+              {event.tags && event.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {event.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-[#F8F7FA] text-[#6F7287] rounded-full text-sm capitalize"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Map */}
+              <div>
+                <h2 className="text-xl font-semibold text-[#1E0A3C] mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  Location
+                </h2>
+                <EventMap
+                  coordinates={event.coordinates}
+                  address={event.venue_address || event.city || event.location}
+                  eventTitle={event.title}
+                  height="350px"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Ticket Card */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl p-6 shadow-sm sticky top-24">
+              <h2 className="text-lg font-semibold text-[#1E0A3C] mb-4">Get Tickets</h2>
+
+              {/* Ticket Types */}
+              {ticketTypes.length > 0 ? (
+                <div className="space-y-3 mb-6">
+                  {ticketTypes.map((ticket) => (
+                    <button
+                      key={ticket.id}
+                      onClick={() => handleTicketSelect(ticket)}
+                      disabled={ticket.available <= 0}
+                      className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
+                        selectedTicket?.id === ticket.id
+                          ? 'border-[#F05537] bg-[#FFF5F3]'
+                          : ticket.available <= 0
+                          ? 'border-[#E6E5E8] opacity-50 cursor-not-allowed'
+                          : 'border-[#E6E5E8] hover:border-[#D2D2D6]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-[#39364F]">{ticket.name}</p>
+                          <p className="text-sm text-[#6F7287]">
+                            {ticket.available > 0 ? `${ticket.available} available` : 'Sold out'}
+                          </p>
+                        </div>
+                        <p className="font-semibold text-[#F05537]">
+                          {formatCurrency(ticket.price)}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-[#6F7287]">
+                  No tickets available for this event.
+                </div>
+              )}
+
+              {/* Quantity and Purchase Section */}
+              {selectedTicket && selectedTicket.available > 0 && (
+                <>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="text-[#39364F]">Quantity</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleQuantityChange(-1)}
+                        disabled={quantity <= 1}
+                        className="w-8 h-8 rounded-full border border-[#D2D2D6] flex items-center justify-center disabled:opacity-50 hover:border-[#F05537]"
+                      >
+                        <Minus className="w-4 h-4" />
