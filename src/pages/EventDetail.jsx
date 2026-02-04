@@ -398,3 +398,102 @@ const EventDetail = () => {
                         className="w-8 h-8 rounded-full border border-[#D2D2D6] flex items-center justify-center disabled:opacity-50 hover:border-[#F05537]"
                       >
                         <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-8 text-center font-medium">{quantity}</span>
+                      <button
+                        onClick={() => handleQuantityChange(1)}
+                        disabled={quantity >= Math.min(10, selectedTicket.available)}
+                        className="w-8 h-8 rounded-full border border-[#D2D2D6] flex items-center justify-center disabled:opacity-50 hover:border-[#F05537]"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Total */}
+                  <div className="flex items-center justify-between mb-6 pt-4 border-t border-[#E6E5E8]">
+                    <span className="font-semibold text-[#39364F]">Total</span>
+                    <span className="text-xl font-bold text-[#F05537]">
+                      {formatCurrency(totalPrice)}
+                    </span>
+                  </div>
+
+                  {/* Purchase Button */}
+                  <Button
+                    onClick={handlePurchase}
+                    disabled={!selectedTicket || selectedTicket.available <= 0}
+                    className="w-full bg-[#F05537] hover:bg-[#D94E32] text-white py-6 h-auto text-lg font-semibold mb-4 disabled:opacity-50"
+                  >
+                    Get Tickets
+                  </Button>
+                </>
+              )}
+
+              {/* Success Message */}
+              {showSuccess && (
+                <div className="flex items-center gap-2 text-[#00A600] text-sm mb-4">
+                  <Check className="w-4 h-4" />
+                  Added to cart! Proceed to checkout.
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                {/* Save button - only show for authenticated users */}
+                {isAuthenticated && (
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 border rounded-lg transition-colors disabled:opacity-50 ${
+                      isSaved
+                        ? 'border-[#F05537] text-[#F05537]'
+                        : 'border-[#D2D2D6] text-[#6F7287] hover:border-[#F05537]'
+                    }`}
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                    )}
+                    {isSaved ? 'Saved' : 'Save'}
+                  </button>
+                )}
+                <button className={`flex items-center justify-center gap-2 py-3 border border-[#D2D2D6] text-[#6F7287] rounded-lg hover:border-[#F05537] transition-colors ${isAuthenticated ? 'flex-1' : 'w-full'}`}>
+                  <Share2 className="w-4 h-4" />
+                  Share
+                </button>
+              </div>
+
+              {/* Availability Info */}
+              {totalTickets > 0 && (
+                <div className="mt-6 pt-4 border-t border-[#E6E5E8]">
+                  <div className="flex items-center gap-2 text-sm text-[#6F7287]">
+                    <Users className="w-4 h-4" />
+                    <span>{ticketsSold} / {totalTickets} tickets sold</span>
+                  </div>
+                  <div className="mt-2 w-full bg-[#E6E5E8] rounded-full h-2">
+                    <div
+                      className="bg-[#F05537] h-2 rounded-full transition-all"
+                      style={{ width: `${Math.min((ticketsSold / totalTickets) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ticket Purchase Modal */}
+      {eventDataForModal && (
+        <TicketPurchaseModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          event={eventDataForModal}
+        />
+      )}
+    </div>
+  );
+};
+
+export default EventDetail;
