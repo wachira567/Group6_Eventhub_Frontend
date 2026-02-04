@@ -121,3 +121,12 @@ const EventDetail = () => {
     }
   };
 
+  const handlePurchase = () => {
+    // Allow guest checkout - no authentication required
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
