@@ -195,5 +195,145 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }
   };
 
+  // Step 2: Initiate MPESA STK Push
+  const handleInitiatePayment = async () => {
+    setError(null);
+
+    if (!isValidKenyanPhone(phoneNumber)) {
+      setError('Please enter a valid Kenyan phone number (07XX XXX XXX or 2547XX XXX XXX)');
+      return;
+    }
+
+    if (!ticketId) {
+      setError('Ticket not reserved. Please try again.');
+      setStep('selection');
+      return;
+    }
+
+    setStep('processing');
+    setCountdown(60);
+
+    try {
+      const formattedPhone = formatPhoneForApi(phoneNumber);
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add auth token if available
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/mpesa/stkpush`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          ticket_id: ticketId,
+          phone_number: formattedPhone,
+          guest_token: guestToken || sessionStorage.getItem(`guest_token_${ticketId}`),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to initiate payment');
+      }
+
+      setCheckoutRequestId(data.checkout_request_id);
+      
+      // Start polling for payment status
+      startPolling(data.checkout_request_id);
+    } catch (err) {
+      setStep('payment');
+      setError(err.message);
+    }
+  };
+
+  // Poll for payment status
+  const startPolling = useCallback((checkoutId) => {
+    let pollCount = 0;
+    const maxPolls = 24; // 2 minutes (5 seconds * 24)
+    
+    const pollInterval = setInterval(async () => {
+      pollCount++;
+      
+      try {
+        const headers = {};
+        
+        // Add auth or guest token
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        let url = `${API_BASE_URL}/mpesa/status/${checkoutId}`;
+        
+        // For guest users, use guest status endpoint
+        if (!isAuthenticated && guestToken) {
+          url = `${API_BASE_URL}/mpesa/guest-status/${checkoutId}?guest_token=${guestToken}`;
+        }
+
+        const response = await fetch(url, { headers });
+        const data = await response.json();
+
+        if (response.ok && data.transaction) {
+          const status = data.transaction.status;
+          const paymentCompleted = data.payment_completed;
+          
+          // Check both transaction status and ticket payment status
+          if (status === 'completed' || paymentCompleted === true) {
+            clearInterval(pollInterval);
+            setPollingInterval(null);
+            setStep('success');
+            
+            // Auto-redirect after success
+            setTimeout(() => {
+              onClose();
+              if (isAuthenticated) {
+                navigate('/attendee/my-tickets');
+              }
+            }, 5000);
+          } else if (status === 'failed' || status === 'cancelled') {
+            clearInterval(pollInterval);
+            setPollingInterval(null);
+            setStep('error');
+            setError(data.transaction.result_desc || 'Payment failed or was cancelled');
+          }
+          // If status is still 'pending' or 'processing', continue polling
+        }
+        
+        // If transaction not found yet, continue polling (might still be processing)
+        if (response.status === 404 && pollCount < maxPolls) {
+          console.log('Transaction not found yet, continuing to poll...');
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+      
+      // Stop polling after max attempts
+      if (pollCount >= maxPolls) {
+        clearInterval(pollInterval);
+        setPollingInterval(null);
+        setStep('payment');
+        setError('Payment confirmation timed out. If you completed the payment, please check your tickets or email. Otherwise, please try again.');
+      }
+    }, 5000); // Poll every 5 seconds
+
+    setPollingInterval(pollInterval);
+
+    // Safety timeout - stop polling after 2 minutes
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      setPollingInterval((current) => {
+        if (current === pollInterval) {
+          return null;
+        }
+        return current;
+      });
+    }, 125000);
+  }, [token, guestToken, isAuthenticated, navigate, onClose]);
+
+
 
 
