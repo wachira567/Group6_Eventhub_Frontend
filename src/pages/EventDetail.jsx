@@ -168,3 +168,23 @@ const EventDetail = () => {
     }
   };
 
+  // Construct event data for the modal (matching the expected format)
+  const eventDataForModal = event ? {
+    id: event.id,
+    title: event.title,
+    ticketTypes: ticketTypes,
+  } : null;
+
+  const totalPrice = (selectedTicket?.price || 0) * quantity;
+
+  // Calculate total tickets and sold tickets
+  const totalTickets = ticketTypes.reduce((sum, tt) => sum + (tt.quantity_total || 0), 0);
+  const ticketsSold = ticketTypes.reduce((sum, tt) => sum + (tt.quantity_sold || 0), 0);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F7FA] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-[#F05537] animate-spin mx-auto mb-4" />
+          <p className="text-[#6F7287]">Loading event details...</p>
