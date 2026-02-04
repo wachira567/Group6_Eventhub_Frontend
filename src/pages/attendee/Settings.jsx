@@ -47,3 +47,36 @@ const AttendeeSettings = () => {
       }));
     }
   }, [user]);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+
+    if (!formData.currentPassword.trim()) {
+      newErrors.currentPassword = 'Current password is required to save changes';
+    }
+
+    // Validate phone if provided
+    if (formData.phone) {
+      const phoneRegex = /^[+]?[\d\s-()]{10,20}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        newErrors.phone = 'Please enter a valid phone number';
+      }
+    }
+
+    // Validate password fields if user wants to change password
+    if (formData.newPassword || formData.confirmPassword) {
+      if (formData.newPassword.length < 6) {
+        newErrors.newPassword = 'New password must be at least 6 characters';
+      }
+      if (formData.newPassword !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
