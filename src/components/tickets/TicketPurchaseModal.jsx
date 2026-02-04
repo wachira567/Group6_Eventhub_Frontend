@@ -334,6 +334,63 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }, 125000);
   }, [token, guestToken, isAuthenticated, navigate, onClose]);
 
+    const handleClose = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+    onClose();
+  };
+
+  // Handle ticket download for guests
+  const handleDownloadTicket = async () => {
+    try {
+      const storedToken = guestToken || sessionStorage.getItem(`guest_token_${ticketId}`);
+      let url = `${API_BASE_URL}/tickets/download/${ticketId}`;
+      
+      // Add guest token or email as query parameter
+      const params = new URLSearchParams();
+      if (storedToken) {
+        params.append('guest_token', storedToken);
+      } else if (email) {
+        params.append('email', email);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to download ticket');
+      }
+      
+      // Create a blob from the PDF response
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `EventHub_Ticket_${ticketId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError('Failed to download ticket: ' + err.message);
+    }
+  };
+
+  const totalPrice = (selectedTicketType?.price || 0) * quantity;
+
+  if (!isOpen) return null;
+
+
 
 
 
