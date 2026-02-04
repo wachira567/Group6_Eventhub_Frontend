@@ -248,3 +248,144 @@ const Events = () => {
                   <div className="space-y-2">
                     {CATEGORIES.map((cat) => (
                       <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="category"
+                          checked={categoryFilter === cat.id}
+                          onChange={() => updateFilter('category', cat.id)}
+                          className="text-[#F05537] focus:ring-[#F05537]"
+                        />
+                        <span className="text-sm text-[#6F7287]">{cat.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Price Filter */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium text-[#39364F] mb-3">Price</h4>
+                  <div className="space-y-2">
+                    {[
+                      { value: '', label: 'All' },
+                      { value: 'free', label: 'Free' },
+                      { value: 'paid', label: 'Paid' },
+                    ].map((option) => (
+                      <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="price"
+                          checked={priceFilter === option.value}
+                          onChange={() => updateFilter('price', option.value)}
+                          className="text-[#F05537] focus:ring-[#F05537]"
+                        />
+                        <span className="text-sm text-[#6F7287]">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Date Filter */}
+                <div>
+                  <h4 className="text-sm font-medium text-[#39364F] mb-3">Date</h4>
+                  <div className="space-y-2">
+                    {[
+                      { value: '', label: 'Any date' },
+                      { value: 'today', label: 'Today' },
+                      { value: 'tomorrow', label: 'Tomorrow' },
+                      { value: 'weekend', label: 'This weekend' },
+                      { value: 'week', label: 'This week' },
+                    ].map((option) => (
+                      <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="date"
+                          checked={dateFilter === option.value}
+                          onChange={() => updateFilter('date', option.value)}
+                          className="text-[#F05537] focus:ring-[#F05537]"
+                        />
+                        <span className="text-sm text-[#6F7287]">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Events Grid */}
+          <div className="flex-1">
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center py-16">
+                <Spinner className="w-12 h-12 text-[#F05537]" />
+              </div>
+            )}
+
+            {/* Error State */}
+            {!loading && error && (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <X className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1E0A3C] mb-2">
+                  Error loading events
+                </h3>
+                <p className="text-[#6F7287] mb-4">{error}</p>
+                <Button onClick={() => window.location.reload()} variant="outline">
+                  Try Again
+                </Button>
+              </div>
+            )}
+
+            {/* Events Content */}
+            {!loading && !error && (
+              <>
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-[#6F7287]">
+                    Showing <span className="font-semibold text-[#39364F]">{events.length}</span> events
+                  </p>
+                </div>
+
+                {events.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {events.map((event) => (
+                      <EventCard 
+                        key={event.id} 
+                        event={event} 
+                        onGetTickets={handleOpenModal}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 bg-[#F8F7FA] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="w-8 h-8 text-[#A9A8B3]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#1E0A3C] mb-2">
+                      No events found
+                    </h3>
+                    <p className="text-[#6F7287] mb-4">
+                      Try adjusting your search or filters to find what you are looking for.
+                    </p>
+                    <Button onClick={clearFilters} variant="outline">
+                      Clear Filters
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Ticket Purchase Modal */}
+      <TicketPurchaseModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        event={selectedEvent}
+      />
+    </div>
+  );
+};
+
+export default Events;
