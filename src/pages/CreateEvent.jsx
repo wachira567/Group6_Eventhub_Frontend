@@ -348,3 +348,55 @@ const CreateEvent = () => {
                       />
                     </div>
                   </div>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={addTicketType}
+                className="flex items-center gap-2 text-[#F05537] font-medium hover:text-[#D94E32]"
+              >
+                <Plus className="w-5 h-5" />
+                Add Ticket Type
+              </button>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between">
+            {step > 1 ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(step - 1)}
+              >
+                Previous
+              </Button>
+            ) : (
+              <div />
+            )}
+
+            {step < 3 ? (
+              <Button
+                type="button"
+                onClick={() => setStep(step + 1)}
+                className="bg-[#F05537] hover:bg-[#D94E32]"
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                className="bg-[#F05537] hover:bg-[#D94E32]"
+              >
+                Create Event
+              </Button>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default CreateEvent;
