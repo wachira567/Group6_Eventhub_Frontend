@@ -148,3 +148,103 @@ const Events = () => {
     setSearchParams(new URLSearchParams());
   };
 
+  const hasActiveFilters = searchQuery || locationFilter || categoryFilter || priceFilter || dateFilter;
+
+  return (
+    <div className="min-h-screen bg-[#F8F7FA]">
+      {/* Header */}
+      <div className="bg-white border-b border-[#E6E5E8]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <h1 className="text-2xl lg:text-3xl font-bold text-[#1E0A3C] mb-4">
+            {searchQuery ? `Search results for "${searchQuery}"` : 'All Events'}
+          </h1>
+          
+          {/* Search and Filter Bar */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 flex items-center bg-[#F8F7FA] border border-[#D2D2D6] rounded-lg px-4 py-3">
+              <Search className="w-5 h-5 text-[#6F7287] mr-3" />
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={searchQuery}
+                onChange={(e) => updateFilter('search', e.target.value)}
+                className="flex-1 bg-transparent outline-none text-[#39364F]"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2"
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+              {hasActiveFilters && (
+                <span className="w-5 h-5 bg-[#F05537] text-white rounded-full text-xs flex items-center justify-center">
+                  !
+                </span>
+              )}
+            </Button>
+          </div>
+
+          {/* Active Filters */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#F05537]/10 text-[#F05537] rounded-full text-sm">
+                  Search: {searchQuery}
+                  <button onClick={() => updateFilter('search', '')}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {locationFilter && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#F05537]/10 text-[#F05537] rounded-full text-sm">
+                  <MapPin className="w-3 h-3" />
+                  {locationFilter}
+                  <button onClick={() => updateFilter('location', '')}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {categoryFilter && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#F05537]/10 text-[#F05537] rounded-full text-sm">
+                  {categoryFilter}
+                  <button onClick={() => updateFilter('category', '')}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              <button
+                onClick={clearFilters}
+                className="text-sm text-[#6F7287] hover:text-[#F05537] underline"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Filters Sidebar */}
+          {showFilters && (
+            <div className="lg:w-64 flex-shrink-0">
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-[#1E0A3C]">Filters</h3>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="lg:hidden text-[#6F7287]"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Category Filter */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium text-[#39364F] mb-3">Category</h4>
+                  <div className="space-y-2">
+                    {CATEGORIES.map((cat) => (
+                      <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
