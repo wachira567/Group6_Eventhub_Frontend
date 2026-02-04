@@ -94,4 +94,56 @@ const EventMap = ({ coordinates, address, eventTitle, height = '300px' }) => {
   );
 };
 
+
+  const openInGoogleMaps = () => {
+    if (!coordinates) return;
+    const [lng, lat] = coordinates;
+    let url = userLocation 
+      ? `https://www.google.com/maps/dir/?api=1&origin=${userLocation[1]},${userLocation[0]}&destination=${lat},${lng}`
+      : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    window.open(url, '_blank');
+  };
+
+  if (!coordinates) 
+
+  return (
+    <div className="space-y-3">
+      <div ref={mapContainer} style={{ height }} className="w-full rounded-lg border border-gray-200 overflow-hidden" />
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
+          <MapPin className="w-5 h-5 text-[#F05537] flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="font-medium text-gray-800 text-sm">Event Location</p>
+            <p className="text-sm text-gray-600 truncate">{address}</p>
+          </div>
+        </div>
+
+        {distance !== null && (
+          <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+            <Route className="w-5 h-5 text-blue-600" />
+            <div>
+              <p className="font-medium text-blue-800 text-sm">Distance</p>
+              <p className="text-sm text-blue-600">
+                {distance < 1 ? `${(distance * 1000).toFixed(0)} m` : `${distance.toFixed(1)} km`}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={getUserLocation} disabled={isLocating} variant="outline" className="flex-1 sm:flex-none">
+          <Navigation className="w-4 h-4 mr-2" />
+          {isLocating ? 'Locating...' : 'Show Distance'}
+        </Button>
+        <Button onClick={openInGoogleMaps} className="flex-1 sm:flex-none bg-[#F05537] hover:bg-[#D94E32]">
+          <ExternalLink className="w-4 h-4 mr-2" />
+          {userLocation ? 'Get Directions' : 'Open in Maps'}
+        </Button>
+      </div>
+    </div>
+  );
+
+
 export default EventMap;
