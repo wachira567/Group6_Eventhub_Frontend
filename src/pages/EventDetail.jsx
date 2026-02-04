@@ -105,3 +105,19 @@ const EventDetail = () => {
     checkSavedStatus();
   }, [id, isAuthenticated, token]);
 
+  const handleQuantityChange = (delta) => {
+    const newQuantity = quantity + delta;
+    const maxAvailable = selectedTicket?.available || 10;
+    if (newQuantity >= 1 && newQuantity <= Math.min(10, maxAvailable)) {
+      setQuantity(newQuantity);
+    }
+  };
+
+  const handleTicketSelect = (ticket) => {
+    setSelectedTicket(ticket);
+    // Reset quantity if it exceeds available
+    if (quantity > ticket.available) {
+      setQuantity(1);
+    }
+  };
+
