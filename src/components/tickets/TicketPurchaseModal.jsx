@@ -144,5 +144,56 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     await proceedToReserve();
   };
 
+   // Proceed to reserve ticket
+  const proceedToReserve = async () => {
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add auth token if available
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const body = {
+        event_id: event.id,
+        ticket_type_id: selectedTicketType.id,
+        quantity: quantity,
+      };
+
+      // Add guest details if not authenticated
+      if (!isAuthenticated) {
+        body.email = email;
+        body.name = guestName;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/tickets/purchase`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reserve ticket');
+      }
+
+      setTicketId(data.ticket.id);
+      
+      // Store guest token if provided
+      if (data.guest_token) {
+        setGuestToken(data.guest_token);
+        // Store in session storage for persistence
+        sessionStorage.setItem(`guest_token_${data.ticket.id}`, data.guest_token);
+      }
+      
+      setStep('payment');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
 
 
