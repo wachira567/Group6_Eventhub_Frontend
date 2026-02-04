@@ -57,3 +57,19 @@ const CreateEvent = () => {
     setFormData({ ...formData, ticketTypes: newTicketTypes });
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Simulate event creation
+    alert('Event created successfully!');
+    navigate('/dashboard/events');
+  };
+
+  const steps = [
+    { number: 1, title: 'Event Details' },
+    { number: 2, title: 'Date & Location' },
+    { number: 3, title: 'Tickets' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#F8F7FA]">
+      {/* Header */}
