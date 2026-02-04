@@ -248,3 +248,103 @@ const CreateEvent = () => {
                     <input
                       type="time"
                       name="endTime"
+                      value={formData.endTime}
+                      onChange={handleChange}
+                      required
+                      className="w-full pl-10 pr-4 py-3 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] focus:border-[#F05537] outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="block text-sm font-medium text-[#39364F] mb-2">
+                  Venue Name *
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9A8B3]" />
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] focus:border-[#F05537] outline-none"
+                    placeholder="e.g., Carnivore Restaurant"
+                  />
+                </div>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="block text-sm font-medium text-[#39364F] mb-2">
+                  Full Address *
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                  rows={2}
+                  className="w-full px-4 py-3 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] focus:border-[#F05537] outline-none resize-none"
+                  placeholder="Full address for attendees"
+                />
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="bg-white rounded-xl p-6 shadow-sm space-y-6">
+              <h2 className="text-xl font-semibold text-[#1E0A3C]">Tickets</h2>
+
+              {formData.ticketTypes.map((ticket, index) => (
+                <div
+                  key={index}
+                  className="border border-[#E6E5E8] rounded-lg p-4 space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-[#39364F]">Ticket Type {index + 1}</h3>
+                    {formData.ticketTypes.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTicketType(index)}
+                        className="text-[#C5162E] hover:text-red-700"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-[#6F7287] mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={ticket.name}
+                        onChange={(e) => handleTicketChange(index, 'name', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
+                        placeholder="e.g., VIP"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-[#6F7287] mb-1">Price (KES)</label>
+                      <input
+                        type="number"
+                        value={ticket.price}
+                        onChange={(e) => handleTicketChange(index, 'price', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-[#6F7287] mb-1">Quantity</label>
+                      <input
+                        type="number"
+                        value={ticket.quantity}
+                        onChange={(e) => handleTicketChange(index, 'quantity', e.target.value)}
+                        className="w-full px-3 py-2 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
+                        placeholder="100"
+                      />
+                    </div>
+                  </div>
