@@ -125,4 +125,24 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
 
     let hasError = false;
 
+     // Validate email
+    if (!email || !isValidEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      hasError = true;
+    }
+
+    // Validate name
+    if (!guestName || guestName.trim().length < 2) {
+      setNameError('Please enter your full name');
+      hasError = true;
+    }
+
+    if (hasError) {
+      return;
+    }
+
+    await proceedToReserve();
+  };
+
+
 
