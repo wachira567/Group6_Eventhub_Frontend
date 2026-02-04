@@ -28,3 +28,18 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
   const [countdown, setCountdown] = useState(60);
   const [emailError, setEmailError] = useState('');
   const [nameError, setNameError] = useState('');
+
+    // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen && event?.ticketTypes?.length > 0) {
+      setSelectedTicketType(event.ticketTypes[0]);
+      setQuantity(1);
+      setStep('selection');
+      setError(null);
+      setEmailError('');
+      setNameError('');
+      setPhoneNumber(user?.phoneNumber || '');
+      setEmail(user?.email || '');
+      setGuestName(user?.name || '');
+    }
+  }, [isOpen, event, user]);
