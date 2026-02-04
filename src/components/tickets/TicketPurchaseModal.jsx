@@ -43,3 +43,20 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
       setGuestName(user?.name || '');
     }
   }, [isOpen, event, user]);
+
+    // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  // Countdown timer for payment
+  useEffect(() => {
+    if (step === 'processing' && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [step, countdown]);
