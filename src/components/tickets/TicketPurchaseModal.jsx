@@ -69,3 +69,11 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     }
   };
 
+   const handleTicketTypeSelect = (ticketType) => {
+    setSelectedTicketType(ticketType);
+    // Reset quantity if it exceeds available
+    if (quantity > ticketType.available) {
+      setQuantity(1);
+    }
+  };
+
