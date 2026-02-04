@@ -30,3 +30,55 @@ const EventDetail = () => {
 
   // Fetch event data from API
   useEffect(() => {
+    const fetchEventData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // API_BASE_URL already includes /api prefix
+        const response = await fetch(`${API_BASE_URL}/events/${id}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Event not found');
+          }
+          throw new Error('Failed to fetch event data');
+        }
+        
+        const data = await response.json();
+        
+        // Set event data
+        setEvent(data.event);
+        
+        // Transform ticket types to match the expected format
+        const transformedTicketTypes = (data.ticket_types || []).map(tt => ({
+          id: tt.id,  // Use the integer ID from the database
+          name: tt.name,
+          price: tt.price,
+          available: tt.available,
+          quantity_total: tt.quantity_total,
+          quantity_sold: tt.quantity_sold,
+          description: tt.description,
+        }));
+        
+        setTicketTypes(transformedTicketTypes);
+        
+        // Set default selected ticket (first available one)
+        if (transformedTicketTypes.length > 0) {
+          const availableTicket = transformedTicketTypes.find(t => t.available > 0) || transformedTicketTypes[0];
+          setSelectedTicket(availableTicket);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchEventData();
+    }
+  }, [id]);
+
+  // Check if event is saved (only for authenticated users)
+  useEffect(() => {
