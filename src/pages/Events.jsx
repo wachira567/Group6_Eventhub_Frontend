@@ -78,3 +78,58 @@ const Events = () => {
         if (priceFilter) {
           if (priceFilter === 'free') {
             fetchedEvents = fetchedEvents.filter(event => {
+              // Check if event has a minimum price of 0 or is free
+              const minPrice = event.ticket_types?.length > 0 
+                ? Math.min(...event.ticket_types.map(tt => tt.price || 0))
+                : event.price || 0;
+              return minPrice === 0;
+            });
+          } else if (priceFilter === 'paid') {
+            fetchedEvents = fetchedEvents.filter(event => {
+              const minPrice = event.ticket_types?.length > 0 
+                ? Math.min(...event.ticket_types.map(tt => tt.price || 0))
+                : event.price || 0;
+              return minPrice > 0;
+            });
+          }
+        }
+        
+        // Transform backend event format to match frontend expectations
+        const transformedEvents = fetchedEvents.map(event => {
+          const ticketTypes = event.ticket_types?.map(tt => ({
+            id: tt.id,
+            name: tt.name,
+            price: tt.price || 0,
+            available: (tt.quantity_total || 0) - (tt.quantity_sold || 0)
+          })) || [];
+          
+          const minPrice = ticketTypes.length > 0 
+            ? Math.min(...ticketTypes.map(tt => tt.price))
+            : event.price || 0;
+          
+          return {
+            id: event.id,
+            title: event.title,
+            date: event.start_date,
+            location: event.location,
+            price: minPrice,
+            image: event.image_url || 'https://res.cloudinary.com/dtbe44muv/image/upload/v1770062126/event-1_ivv30i.jpg',
+            organizer: event.organizer_name || 'Event Organizer',
+            ticketsSold: event.tickets_sold || 0,
+            totalTickets: event.total_capacity || 100,
+            category: event.category,
+            ticketTypes: ticketTypes,
+          };
+        });
+        
+        setEvents(transformedEvents);
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        setError('Failed to load events. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [searchQuery, locationFilter, categoryFilter, priceFilter]);
