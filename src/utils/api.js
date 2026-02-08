@@ -1,16 +1,18 @@
 import { API_BASE_URL } from './constants';
 import { store } from '../store/store';
-import { logout } from '../store/slices/authSlice';
+import { logout, setTokens } from '../store/slices/authSlice';
 import { toast } from 'sonner';
 
 /**
- * Makes an authenticated API request with automatic token handling
+ * Makes an authenticated API request with automatic token handling and refresh
  * @param {string} endpoint - API endpoint (relative to base URL)
  * @param {Object} options - Fetch options
+ * @param {boolean} isRetry - Whether this is a retry after token refresh
  * @returns {Promise<Response>} - Fetch response
  */
-export const apiRequest = async (endpoint, options = {}) => {
+export const apiRequest = async (endpoint, options = {}, isRetry = false) => {
   const token = localStorage.getItem('token');
+  const refreshToken = localStorage.getItem('refreshToken');
   
   // Set default headers
   const headers = {
@@ -33,18 +35,80 @@ export const apiRequest = async (endpoint, options = {}) => {
     
     // Handle 401 - Unauthorized
     if (response.status === 401) {
-      console.log('Token expired or invalid, logging out...');
-      store.dispatch(logout());
-      toast.error('Session expired', {
-        description: 'Please log in again to continue.',
-      });
+      // If this is already a retry, or no refresh token available, logout
+      if (isRetry || !refreshToken) {
+        console.log('Token expired or invalid, logging out...');
+        store.dispatch(logout());
+        toast.error('Session expired', {
+          description: 'Please log in again to continue.',
+        });
+        
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1500);
+        
+        throw new Error('Session expired');
+      }
       
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 1500);
-      
-      throw new Error('Session expired');
+      // Try to refresh the token
+      console.log('Token expired, attempting to refresh...');
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json();
+          
+          // Store new tokens
+          const newAccessToken = refreshData.access_token;
+          localStorage.setItem('token', newAccessToken);
+          localStorage.setItem('refreshToken', refreshToken);
+          
+          // Update Redux store
+          store.dispatch(setTokens({
+            token: newAccessToken,
+            refreshToken: refreshToken
+          }));
+          
+          console.log('Token refreshed successfully, retrying request...');
+          
+          // Retry the original request with new token
+          return apiRequest(endpoint, options, true);
+        } else {
+          // Refresh failed, logout
+          console.log('Token refresh failed, logging out...');
+          store.dispatch(logout());
+          toast.error('Session expired', {
+            description: 'Please log in again to continue.',
+          });
+          
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
+          
+          throw new Error('Session expired');
+        }
+      } catch (refreshError) {
+        if (refreshError.message === 'Session expired') {
+          throw refreshError;
+        }
+        console.error('Token refresh error:', refreshError);
+        store.dispatch(logout());
+        toast.error('Session expired', {
+          description: 'Please log in again to continue.',
+        });
+        
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1500);
+        
+        throw new Error('Session expired');
+      }
     }
     
     return response;

@@ -1,6 +1,6 @@
-# EventHub Frontend - React Application
+# EventHub Frontend
 
-React frontend for the EventHub event management platform, built with Vite.
+A React-based frontend for the EventHub event ticketing and management platform, built with Vite.
 
 ## 🚀 Quick Start
 
@@ -19,117 +19,225 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
+---
+
+## 🛠 Technologies Used
+
+### Core Framework
+
+- **React 19.2.0** - UI library for building user interfaces
+- **Vite 7.2.4** - Fast build tool and development server
+- **React Router DOM 7.13.0** - Client-side routing
+
+### State Management
+
+- **Redux Toolkit 2.11.2** - State management with slices for auth, events, tickets, and UI
+
+### UI Components & Styling
+
+- **Tailwind CSS 3.4.19** - Utility-first CSS framework
+- **shadcn/ui** - Beautiful, reusable components built with Radix UI:
+  - Button, Card, Dialog, Sheet, Tabs
+  - Select, Table, Form, Input
+  - Avatar, Badge, Progress, Tooltip
+  - And more...
+- **Lucide React 0.562.0** - Beautiful icon set
+- **clsx 2.1.1** - Utility for constructing className strings
+- **tailwind-merge 3.4.0** - Merge Tailwind CSS classes
+
+### Forms & Validation
+
+- **React Hook Form 7.70.0** - Performant form management
+- **Zod 4.3.5** - Schema validation
+- **@hookform/resolvers 5.2.2** - Zod resolver for React Hook Form
+
+### Data Visualization
+
+- **Recharts 2.15.4** - Composable charting library for React
+
+### Maps & Location
+
+- **Mapbox GL 3.18.1** - Interactive maps and location picker
+
+### QR Code & Scanning
+
+- **qrcode 7.4.2** - QR code generation
+- **html5-qrcode 2.3.8** - QR code scanning in browser
+
+### Date & Time
+
+- **date-fns 4.1.0** - Modern JavaScript date utility library
+- **React Day Picker 9.13.0** - Accessible date picker
+
+### Animation
+
+- **Framer Motion** - Animation library (via tw-animate-css)
+- **embla-carousel-react 8.6.0** - Carousel/slider component
+- **sonner 2.0.7** - Toast notifications
+
+### Development Tools
+
+- **ESLint 9.39.1** - Code linting
+- **PostCSS 8.5.6** - CSS transformation
+- **Autoprefixer 10.4.23** - PostCSS plugin for vendor prefixes
+
+---
+
 ## 📁 Project Structure
 
 ```
-Frontend/
-├── index.html
-├── package.json
-├── vite.config.js
-├── tailwind.config.js
-├── postcss.config.js
-├── eslint.config.js
+group_frontend/
+├── index.html              # Entry HTML file
+├── package.json             # Dependencies and scripts
+├── vite.config.js          # Vite configuration
+├── tailwind.config.js      # Tailwind CSS configuration
+├── postcss.config.js       # PostCSS configuration
+├── eslint.config.js        # ESLint configuration
+├── .env                    # Environment variables
 │
-├── public/
-│   └── images/          # Static images
+├── public/                 # Static assets
+│   └── images/             # Static images
 │
 └── src/
-    ├── main.jsx         # App entry point
-    ├── App.jsx          # Root component
-    ├── index.css        # Global styles
+    ├── main.jsx           # Application entry point
+    ├── App.jsx           # Root component with routing
+    ├── index.css          # Global styles
     │
-    ├── components/      # Reusable components
-    │   ├── ui/          # Base UI components
-    │   ├── layout/      # Layout components
-    │   ├── events/      # Event-related
-    │   ├── tickets/     # Ticket-related
-    │   └── organizer/   # Organizer components
+    ├── components/        # Reusable components
+    │   ├── ui/           # Base UI components (shadcn/ui)
+    │   │   ├── button.jsx
+    │   │   ├── card.jsx
+    │   │   ├── dialog.jsx
+    │   │   ├── input.jsx
+    │   │   ├── label.jsx
+    │   │   ├── select.jsx
+    │   │   ├── table.jsx
+    │   │   ├── tabs.jsx
+    │   │   └── ... (30+ more components)
+    │   │
+    │   ├── layout/       # Layout components
+    │   │   ├── Navbar.jsx
+    │   │   ├── Footer.jsx
+    │   │   └── Sidebar.jsx
+    │   │
+    │   ├── events/       # Event-related components
+    │   │   ├── EventCard.jsx
+    │   │   ├── EventMap.jsx
+    │   │   └── MapLocationPicker.jsx
+    │   │
+    │   ├── tickets/      # Ticket-related components
+    │   │   ├── TicketPurchaseModal.jsx
+    │   │   └── TicketScanner.jsx
+    │   │
+    │   └── organizer/    # Organizer components
+    │       └── OrganizerSidebar.jsx
     │
-    ├── pages/           # Route pages
-    │   ├── Home.jsx
-    │   ├── Events.jsx
-    │   ├── EventDetail.jsx
-    │   ├── Login.jsx
-    │   ├── Register.jsx
-    │   ├── VerifyEmail.jsx
-    │   ├── attendee/    # Attendee pages
-    │   ├── organizer/   # Organizer pages
-    │   └── admin/       # Admin pages
+    ├── pages/            # Route pages
+    │   ├── Home.jsx              # Landing page
+    │   ├── Events.jsx            # Browse events
+    │   ├── EventDetail.jsx       # Event details
+    │   ├── Login.jsx             # Login page
+    │   ├── Register.jsx          # Registration page
+    │   ├── VerifyEmail.jsx       # Email verification
+    │   │
+    │   ├── attendee/       # Attendee dashboard pages
+    │   │   ├── Dashboard.jsx     # Overview & stats
+    │   │   ├── MyTickets.jsx     # View tickets
+    │   │   ├── SavedEvents.jsx   # Saved events
+    │   │   └── Settings.jsx      # Account settings
+    │   │
+    │   ├── organizer/     # Organizer pages
+    │   │   ├── Dashboard.jsx     # Overview
+    │   │   ├── MyEvents.jsx      # Manage events
+    │   │   ├── CreateEvent.jsx   # Create new event
+    │   │   ├── EditEvent.jsx     # Edit event
+    │   │   ├── Analytics.jsx     # Event analytics
+    │   │   ├── AttendeeList.jsx  # Attendee management
+    │   │   ├── TicketScanner.jsx # QR scanner
+    │   │   └── Settings.jsx      # Organizer settings
+    │   │
+    │   └── admin/         # Admin pages
+    │       ├── Dashboard.jsx      # Platform overview
+    │       ├── UserManagement.jsx # User management
+    │       ├── EventModeration.jsx # Event approval
+    │       ├── PlatformAnalytics.jsx # Analytics
+    │       └── Reports.jsx        # Reports
     │
-    ├── store/           # Redux state
-    │   ├── store.js
+    ├── store/            # Redux state management
+    │   ├── store.js     # Store configuration
     │   └── slices/
-    │       ├── authSlice.js
-    │       ├── eventsSlice.js
-    │       ├── ticketsSlice.js
-    │       └── uiSlice.js
+    │       ├── authSlice.js     # Authentication state
+    │       ├── eventsSlice.js   # Events state
+    │       ├── ticketsSlice.js  # Tickets state
+    │       └── uiSlice.js       # UI state
     │
     ├── hooks/           # Custom React hooks
+    │   └── use-mobile.js
+    │
     ├── lib/             # Utility libraries
+    │   └── utils.js
+    │
     └── utils/           # Helper functions
-        ├── api.js       # API calls
-        ├── constants.js # Constants
-        ├── helpers.js   # Helper functions
-        └── cloudinary.js
+        ├── api.js           # Axios API configuration
+        ├── constants.js     # App constants
+        ├── helpers.js       # Helper functions
+        └── cloudinary.js    # Cloudinary upload utility
 ```
 
-## 🛠️ Tech Stack
-
-- **React 18** - UI library
-- **Vite** - Build tool
-- **Redux Toolkit** - State management
-- **React Router v6** - Routing
-- **Tailwind CSS** - Styling
-- **Lucide React** - Icons
-- **shadcn/ui** - UI component library
-- **Axios** - HTTP client
+---
 
 ## 📱 Available Pages
 
 ### Public Pages
-| Route | Description |
-|-------|-------------|
-| `/` | Home page with hero section and featured events |
-| `/events` | Browse and search all events |
-| `/events/:id` | Event details with ticket purchase |
-| `/login` | User login page |
-| `/register` | User registration |
-| `/verify-email` | Email verification |
+
+| Route           | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| `/`             | Home page with hero section, featured events, categories |
+| `/events`       | Browse and search all events with filters                |
+| `/events/:id`   | Event details with ticket purchase modal                 |
+| `/login`        | User login page                                          |
+| `/register`     | User registration with role selection                    |
+| `/verify-email` | Email verification page                                  |
 
 ### Attendee Pages (Authenticated)
-| Route | Description |
-|-------|-------------|
-| `/attendee/dashboard` | Personal dashboard |
-| `/attendee/my-tickets` | View purchased tickets |
-| `/attendee/saved-events` | Saved/favorite events |
-| `/attendee/settings` | Account settings |
 
-### Organizer Pages (Authenticated)
-| Route | Description |
-|-------|-------------|
-| `/organizer/dashboard` | Organizer overview |
-| `/organizer/events` | Manage created events |
-| `/organizer/events/create` | Create new event |
-| `/organizer/events/:id/edit` | Edit event |
-| `/organizer/analytics` | Event performance |
-| `/organizer/attendees` | Event attendees list |
-| `/organizer/ticket-scanner` | QR code scanner |
-| `/organizer/settings` | Organizer settings |
+| Route                    | Description                                     |
+| ------------------------ | ----------------------------------------------- |
+| `/attendee`              | Personal dashboard with upcoming tickets, stats |
+| `/attendee/tickets`      | View and manage purchased tickets               |
+| `/attendee/saved-events` | Saved/favorite events                           |
+| `/attendee/settings`     | Account settings and profile                    |
 
-### Admin Pages (Authenticated - Admin role only)
-| Route | Description |
-|-------|-------------|
-| `/admin/dashboard` | Platform overview |
-| `/admin/users` | User management |
-| `/admin/events` | Event moderation |
-| `/admin/analytics` | Platform analytics |
-| `/admin/reports` | Reports & exports |
+### Organizer Pages (Authenticated - Organizer role)
+
+| Route                        | Description                             |
+| ---------------------------- | --------------------------------------- |
+| `/organizer`                 | Organizer overview dashboard            |
+| `/organizer/events`          | List of created events                  |
+| `/organizer/events/create`   | Create new event with ticket types      |
+| `/organizer/events/:id/edit` | Edit event details                      |
+| `/organizer/analytics`       | Event performance charts and stats      |
+| `/organizer/attendees`       | View and export attendee lists          |
+| `/organizer/ticket-scanner`  | QR code scanner for ticket verification |
+| `/organizer/settings`        | Organizer profile settings              |
+
+### Admin Pages (Authenticated - Admin role)
+
+| Route              | Description                    |
+| ------------------ | ------------------------------ |
+| `/admin`           | Platform-wide overview         |
+| `/admin/users`     | User management and moderation |
+| `/admin/events`    | Event moderation queue         |
+| `/admin/analytics` | Platform analytics             |
+| `/admin/reports`   | Generate and export reports    |
+
+---
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-Create a `.env` file:
+Create a `.env` file in the `group_frontend` directory:
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
@@ -137,97 +245,95 @@ VITE_API_BASE_URL=http://localhost:5000/api
 
 ### API Integration
 
-API calls are made through `src/utils/api.js`:
+API calls are managed through `src/utils/api.js` using Axios:
 
 ```javascript
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true, // Required for CORS with authentication
 });
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
+// Handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized - redirect to login
+    }
+    return Promise.reject(error);
+  },
+);
+
 export default api;
 ```
 
-## 🎨 Styling
+---
+
+## 🎨 Styling & Theming
 
 ### Tailwind CSS
 
-The project uses Tailwind CSS for styling. Configuration in `tailwind.config.js`:
+The project uses Tailwind CSS with custom color scheme:
 
 ```javascript
+// tailwind.config.js
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
-        primary: '#1E0A3C',
-        accent: '#F05537',
+        primary: "#1E0A3C", // Deep purple
+        accent: "#F05537", // Coral/orange
+        background: "#F8F7FA", // Light gray background
+        muted: "#6F7287", // Muted text
       },
     },
   },
-  plugins: [],
-}
+  plugins: [require("tailwindcss-animate")],
+};
 ```
 
 ### Component Library
 
-Uses shadcn/ui components located in `src/components/ui/`:
+Built on **shadcn/ui** principles with custom components in `src/components/ui/`. All components are:
 
-- Button, Input, Label
-- Card, Dialog, Sheet
-- Table, Tabs, Select
-- And more...
+- Accessible (WCAG compliant)
+- Themeable via Tailwind
+- Built on Radix UI primitives
 
-## 📦 Building for Production
+Example usage:
 
-```bash
-# Build for production
-npm run build
+```jsx
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-# Preview production build
-npm run preview
+<Button variant="outline">Click me</Button>
+<Card>
+  <CardHeader>
+    <CardTitle>Title</CardTitle>
+  </CardHeader>
+  <CardContent>Content</CardContent>
+</Card>
 ```
 
-The build output will be in the `dist/` folder.
+---
 
-## 🧪 Development
+## 🔐 Authentication Flow
 
-### Code Style
+### Redux Auth Slice
 
-- ESLint configured for code quality
-- Prettier for code formatting
-- Follow React best practices
-
-### Adding New Components
-
-1. Create component in `src/components/`
-2. Export from `src/components/index.js` (if shared)
-3. Use in pages as needed
-
-### Adding New Pages
-
-1. Create page component in `src/pages/`
-2. Add route in `src/App.jsx`:
-   ```jsx
-   <Route path="/new-page" element={<NewPage />} />
-   ```
-
-## 🔐 Authentication
-
-Authentication is handled through Redux auth slice:
+Authentication state is managed via Redux:
 
 ```javascript
 // Login
@@ -237,22 +343,186 @@ dispatch(login({ email, password }));
 dispatch(logout());
 
 // Check auth state
-const { isAuthenticated, user } = useSelector((state) => state.auth);
+const { isAuthenticated, user, token, role } = useSelector(
+  (state) => state.auth,
+);
 ```
 
-Protected routes are wrapped with `ProtectedRoute` component.
+### Protected Routes
 
-## 💳 Payment Integration
+Routes are protected using the `ProtectedRoute` component:
 
-MPESA STK Push integration for payments:
+```jsx
+<Route
+  path="/attendee"
+  element={
+    <ProtectedRoute roles={["attendee", "organizer", "admin"]}>
+      <AttendeeDashboard />
+    </ProtectedRoute>
+  }
+/>
+```
 
-1. User selects ticket and enters phone number
-2. Backend initiates STK Push
-3. User receives prompt on phone
-4. Payment confirmation via callback
-5. Ticket generated and emailed
+### JWT Token Storage
 
-For development, use the "Simulate Payment" button.
+Tokens are stored in localStorage and included in API requests via the Authorization header.
+
+---
+
+## 💳 Payment Integration (M-Pesa)
+
+### Payment Flow
+
+1. User selects ticket type and quantity
+2. Enters phone number for M-Pesa payment
+3. Backend initiates STK Push to user's phone
+4. User enters PIN on their phone
+5. M-Pesa processes and sends callback to backend
+6. Backend confirms payment and generates ticket
+7. Email sent with ticket details
+
+### Development Mode
+
+For testing without real M-Pesa:
+
+- Use the "Simulate Payment" button in the purchase modal
+- Backend provides simulation endpoint
+
+---
+
+## 📊 Features Implemented
+
+### For Attendees
+
+- [x] Browse events by category, city, date
+- [x] Search events by name, location
+- [x] View event details with location map
+- [x] Purchase tickets with M-Pesa
+- [x] Guest checkout (without registration)
+- [x] View purchased tickets
+- [x] Save/favorite events
+- [x] Email verification
+- [x] Password reset
+
+### For Organizers
+
+- [x] Create events with multiple ticket types
+- [x] Upload event images
+- [x] Set early bird pricing
+- [x] Manage ticket inventory
+- [x] View event analytics (sales, revenue)
+- [x] Export attendee lists
+- [x] QR code scanner for ticket verification
+- [x] Event moderation status
+
+### For Admins
+
+- [x] Platform analytics dashboard
+- [x] User management
+- [x] Event moderation queue
+- [x] Platform-wide reports
+
+---
+
+## 📦 Building for Production
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build locally
+npm run preview
+```
+
+The build output will be in the `dist/` folder, ready for deployment.
+
+---
+
+## 🧪 Development Guidelines
+
+### Code Style
+
+- ESLint configured for code quality
+- Follow React best practices and hooks rules
+- Use functional components with hooks
+
+### Adding New Components
+
+1. Create component in appropriate folder:
+   - `src/components/ui/` for base components
+   - `src/components/events/` for event-related
+   - `src/components/tickets/` for ticket-related
+
+2. Export from parent index if shared
+
+3. Use in pages as needed
+
+### Adding New Pages
+
+1. Create page component in `src/pages/`
+2. Add route in `src/App.jsx`:
+   ```jsx
+   <Route path="/new-page" element={<NewPage />} />
+   ```
+3. Add protected route wrapper if authenticated:
+   ```jsx
+   <Route
+     path="/protected-page"
+     element={
+       <ProtectedRoute>
+         <ProtectedPage />
+       </ProtectedRoute>
+     }
+   />
+   ```
+
+### Redux Pattern
+
+Use slices for state management:
+
+```javascript
+// Create slice
+const someSlice = createSlice({
+  name: "some",
+  initialState,
+  reducers: {
+    setData: (state, action) => {
+      state.data = action.payload;
+    },
+  },
+});
+
+export const { setData } = someSlice.actions;
+export default someSlice.reducer;
+```
+
+---
+
+## 🐛 Debugging Tips
+
+### React Dev Tools
+
+Install React Developer Tools browser extension for debugging:
+
+- View component hierarchy
+- Inspect Redux state
+- Debug hooks
+
+### Network Debugging
+
+- Check API responses in browser DevTools Network tab
+- Verify CORS headers
+- Check token validity
+
+### Backend Logs
+
+Run backend with debug mode to see detailed logs:
+
+```bash
+PIPENV_IGNORE_VIRTUALENVS=1 pipenv run flask run --debug
+```
+
+---
 
 ## 📄 License
 

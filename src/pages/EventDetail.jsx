@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { Calendar, MapPin, Clock, Users, Share2, Heart, ChevronLeft, Minus, Plus, Check, Loader2, AlertCircle } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'sonner';
+import { Calendar, MapPin, Clock, Users, Share2, Heart, ChevronLeft, Minus, Plus, Check, Loader2, AlertCircle, Eye } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { formatDate, formatTime, formatCurrency } from '../utils/helpers';
 import { API_BASE_URL } from '../utils/constants';
 import TicketPurchaseModal from '../components/tickets/TicketPurchaseModal';
 import EventMap from '../components/events/EventMap';
+import { ROLES } from '../utils/constants';
 
 const EventDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { isAuthenticated, token, user } = useSelector((state) => state.auth);
+  
+  // Check if user is admin or organizer
+  const isAdminOrOrganizer = user && (user.role === ROLES.ADMIN || user.role === ROLES.ORGANIZER);
   
   // Event data state
   const [event, setEvent] = useState(null);
@@ -52,12 +58,12 @@ const EventDetail = () => {
         
         // Transform ticket types to match the expected format
         const transformedTicketTypes = (data.ticket_types || []).map(tt => ({
-          id: tt.id,  // Use the integer ID from the database
+          id: tt.id,
           name: tt.name,
           price: tt.price,
-          available: tt.available,
-          quantity_total: tt.quantity_total,
-          quantity_sold: tt.quantity_sold,
+          available: tt.quantity - (tt.sold_quantity || 0),
+          quantity_total: tt.quantity,
+          quantity_sold: tt.sold_quantity || 0,
           description: tt.description,
         }));
         
@@ -130,6 +136,12 @@ const EventDetail = () => {
     setIsModalOpen(false);
   };
 
+  // Callback when purchase is successful - refresh tickets data
+  const handlePurchaseSuccess = async () => {
+    // The modal will handle the redirect, but we can trigger any additional refresh here
+    console.log('Purchase completed successfully');
+  };
+
   const handleSave = async () => {
     if (!isAuthenticated || !token) {
       navigate('/login');
@@ -142,8 +154,13 @@ const EventDetail = () => {
     setIsSaving(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/events/${id}/save`, {
-        method: 'POST',
+      const endpoint = newSavedState 
+        ? `${API_BASE_URL}/events/${id}/save` 
+        : `${API_BASE_URL}/events/${id}/unsave`;
+      const method = newSavedState ? 'POST' : 'DELETE';
+      
+      const response = await fetch(endpoint, {
+        method: method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -151,18 +168,22 @@ const EventDetail = () => {
       });
 
       if (!response.ok) {
+        const data = await response.json();
         // Revert on error
         setIsSaved(!newSavedState);
-        throw new Error('Failed to save event');
+        
+        // Show user-friendly error message
+        const errorMessage = data?.error || 'Something went wrong';
+        toast.error(errorMessage);
+        return;
       }
 
-      const data = await response.json();
-      // Sync with server response
-      setIsSaved(data.saved);
+      toast.success(newSavedState ? 'Event saved!' : 'Event removed from saved');
     } catch (err) {
-      console.error('Error saving event:', err);
+      console.error('Error updating saved status:', err);
       // Revert UI on error
       setIsSaved(!newSavedState);
+      toast.error('Unable to update saved status. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -177,7 +198,36 @@ const EventDetail = () => {
 
   const totalPrice = (selectedTicket?.price || 0) * quantity;
 
-  // Calculate total tickets and sold tickets
+  const handleShare = async () => {
+    const shareData = {
+      title: event.title,
+      text: `Check out this event: ${event.title}`,
+      url: window.location.href,
+    };
+
+    // Try native share API first
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast.success('Shared successfully!');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          fallbackCopyToClipboard();
+        }
+      }
+    } else {
+      fallbackCopyToClipboard();
+    }
+  };
+
+  const fallbackCopyToClipboard = () => {
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast.success('Link copied to clipboard!');
+    }).catch(() => {
+      toast.error('Failed to copy link');
+    });
+  };
   const totalTickets = ticketTypes.reduce((sum, tt) => sum + (tt.quantity_total || 0), 0);
   const ticketsSold = ticketTypes.reduce((sum, tt) => sum + (tt.quantity_sold || 0), 0);
 
@@ -234,6 +284,20 @@ const EventDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F7FA]">
+      {/* Admin/Organizer Preview Warning */}
+      {isAdminOrOrganizer && (
+        <div className="bg-purple-100 border-b border-purple-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-center gap-2 text-purple-800">
+              <Eye className="w-5 h-5" />
+              <span className="font-medium">
+                You're viewing a preview of this event as {user.role}. This is how customers will see your event.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Back Button */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <button
@@ -274,11 +338,11 @@ const EventDetail = () => {
               {/* Organizer */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-[#F05537] rounded-full flex items-center justify-center text-white font-semibold">
-                  {event.organizer_id ? 'O' : 'E'}
+                  {event.organizer_name ? event.organizer_name.charAt(0).toUpperCase() : 'O'}
                 </div>
                 <div>
                   <p className="text-sm text-[#6F7287]">Organized by</p>
-                  <p className="font-medium text-[#39364F]">Event Organizer</p>
+                  <p className="font-medium text-[#39364F]">{event.organizer_name || 'Event Organizer'}</p>
                 </div>
               </div>
 
@@ -301,7 +365,7 @@ const EventDetail = () => {
                   </div>
                   <div>
                     <p className="font-medium text-[#39364F]">Location</p>
-                    <p className="text-sm text-[#6F7287]">{event.location}</p>
+                    <p className="text-sm text-[#6F7287]">{event.venue || event.address}</p>
                     <p className="text-sm text-[#A9A8B3]">{event.city}</p>
                   </div>
                 </div>
@@ -336,8 +400,8 @@ const EventDetail = () => {
                   Location
                 </h2>
                 <EventMap
-                  coordinates={event.coordinates}
-                  address={event.venue_address || event.city || event.location}
+                  coordinates={event.coordinates || (event.latitude && event.longitude ? [event.longitude, event.latitude] : null)}
+                  address={event.address || event.city || event.venue}
                   eventTitle={event.title}
                   height="350px"
                 />
@@ -387,7 +451,7 @@ const EventDetail = () => {
               )}
 
               {/* Quantity and Purchase Section */}
-              {selectedTicket && selectedTicket.available > 0 && (
+              {selectedTicket && selectedTicket.available > 0 && !isAdminOrOrganizer && (
                 <>
                   <div className="flex items-center justify-between mb-6">
                     <span className="text-[#39364F]">Quantity</span>
@@ -458,7 +522,10 @@ const EventDetail = () => {
                     {isSaved ? 'Saved' : 'Save'}
                   </button>
                 )}
-                <button className={`flex items-center justify-center gap-2 py-3 border border-[#D2D2D6] text-[#6F7287] rounded-lg hover:border-[#F05537] transition-colors ${isAuthenticated ? 'flex-1' : 'w-full'}`}>
+                <button 
+                  onClick={handleShare}
+                  className={`flex items-center justify-center gap-2 py-3 border border-[#D2D2D6] text-[#6F7287] rounded-lg hover:border-[#F05537] transition-colors ${isAuthenticated ? 'flex-1' : 'w-full'}`}
+                >
                   <Share2 className="w-4 h-4" />
                   Share
                 </button>
@@ -490,6 +557,7 @@ const EventDetail = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           event={eventDataForModal}
+          onPurchaseSuccess={handlePurchaseSuccess}
         />
       )}
     </div>

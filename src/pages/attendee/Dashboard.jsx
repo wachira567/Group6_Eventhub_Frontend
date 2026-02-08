@@ -1,16 +1,25 @@
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { Link, useLocation } from 'react-router-dom';
-import { Ticket, Heart, User, Settings, ChevronRight, Calendar, MapPin, Loader2 } from 'lucide-react';
-import { formatDate, formatCurrency } from '../../utils/helpers';
-import { API_BASE_URL } from '../../utils/constants';
-import { Button } from '../../components/ui/button';
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { Link, useLocation } from "react-router-dom";
+import {
+  Ticket,
+  Heart,
+  User,
+  Settings,
+  ChevronRight,
+  Calendar,
+  MapPin,
+  Loader2,
+} from "lucide-react";
+import { formatDate, formatCurrency } from "../../utils/helpers";
+import { API_BASE_URL } from "../../utils/constants";
+import { Button } from "../../components/ui/button";
 
 const sidebarItems = [
-  { to: '/attendee', icon: User, label: 'Overview' },
-  { to: '/attendee/tickets', icon: Ticket, label: 'My Tickets' },
-  { to: '/attendee/saved', icon: Heart, label: 'Saved Events' },
-  { to: '/attendee/settings', icon: Settings, label: 'Settings' },
+  { to: "/attendee", icon: User, label: "Overview" },
+  { to: "/attendee/tickets", icon: Ticket, label: "My Tickets" },
+  { to: "/attendee/saved", icon: Heart, label: "Saved Events" },
+  { to: "/attendee/settings", icon: Settings, label: "Settings" },
 ];
 
 const AttendeeDashboard = () => {
@@ -38,7 +47,7 @@ const AttendeeDashboard = () => {
         // Fetch user's tickets
         const ticketsRes = await fetch(`${API_BASE_URL}/tickets/my-tickets`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -52,7 +61,7 @@ const AttendeeDashboard = () => {
         // Fetch saved events
         const savedRes = await fetch(`${API_BASE_URL}/events/saved`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -65,18 +74,30 @@ const AttendeeDashboard = () => {
 
         // Calculate stats
         const now = new Date();
-        const upcomingTickets = ticketsData.filter(t => {
+        const upcomingTickets = ticketsData.filter((t) => {
           const eventDate = t.event ? new Date(t.event.start_date) : null;
-          return eventDate && eventDate >= now && t.payment_status === 'completed';
+          // Handle both lowercase 'completed' and uppercase 'COMPLETED'
+          const isPaid =
+            t.payment_status === "completed" ||
+            t.payment_status === "COMPLETED";
+          return eventDate && eventDate >= now && isPaid;
         });
 
-        const pastTickets = ticketsData.filter(t => {
+        const pastTickets = ticketsData.filter((t) => {
           const eventDate = t.event ? new Date(t.event.start_date) : null;
-          return eventDate && eventDate < now && t.payment_status === 'completed';
+          // Handle both lowercase 'completed' and uppercase 'COMPLETED'
+          const isPaid =
+            t.payment_status === "completed" ||
+            t.payment_status === "COMPLETED";
+          return eventDate && eventDate < now && isPaid;
         });
 
         const totalSpent = ticketsData
-          .filter(t => t.payment_status === 'completed')
+          .filter(
+            (t) =>
+              t.payment_status === "completed" ||
+              t.payment_status === "COMPLETED",
+          )
           .reduce((sum, t) => sum + (t.total_price || 0), 0);
 
         setStats({
@@ -85,10 +106,9 @@ const AttendeeDashboard = () => {
           saved: savedData.length,
           totalSpent,
         });
-
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data. Please try again.');
+        console.error("Error fetching dashboard data:", err);
+        setError("Failed to load dashboard data. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -99,11 +119,16 @@ const AttendeeDashboard = () => {
 
   // Get recent upcoming tickets (first 3)
   const recentTickets = tickets
-    .filter(t => {
+    .filter((t) => {
       const eventDate = t.event ? new Date(t.event.start_date) : null;
-      return eventDate && eventDate >= new Date() && t.payment_status === 'completed';
+      // Handle both lowercase 'completed' and uppercase 'COMPLETED'
+      const isPaid =
+        t.payment_status === "completed" || t.payment_status === "COMPLETED";
+      return eventDate && eventDate >= new Date() && isPaid;
     })
-    .sort((a, b) => new Date(a.event?.start_date) - new Date(b.event?.start_date))
+    .sort(
+      (a, b) => new Date(a.event?.start_date) - new Date(b.event?.start_date),
+    )
     .slice(0, 3);
 
   // Get recent saved events (first 2)
@@ -131,13 +156,15 @@ const AttendeeDashboard = () => {
               <div className="p-6 border-b border-[#E6E5E8]">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 bg-[#F05537] rounded-full flex items-center justify-center text-white text-xl font-bold">
-                    {user?.name?.charAt(0) || 'U'}
+                    {user?.name?.charAt(0) || "U"}
                   </div>
                   <div>
-                    <p className="font-semibold text-[#1E0A3C]">{user?.name || 'User'}</p>
+                    <p className="font-semibold text-[#1E0A3C]">
+                      {user?.name || "User"}
+                    </p>
                     <p className="text-sm text-[#6F7287]">{user?.email}</p>
                     <span className="inline-block mt-1 px-2 py-0.5 bg-[#F05537]/10 text-[#F05537] rounded text-xs capitalize">
-                      {user?.role || 'Attendee'}
+                      {user?.role || "Attendee"}
                     </span>
                   </div>
                 </div>
@@ -151,8 +178,8 @@ const AttendeeDashboard = () => {
                     to={item.to}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       location.pathname === item.to
-                        ? 'bg-[#F05537]/10 text-[#F05537]'
-                        : 'text-[#6F7287] hover:bg-[#F8F7FA]'
+                        ? "bg-[#F05537]/10 text-[#F05537]"
+                        : "text-[#6F7287] hover:bg-[#F8F7FA]"
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
@@ -175,10 +202,11 @@ const AttendeeDashboard = () => {
             {/* Welcome Banner */}
             <div className="bg-gradient-to-r from-[#1E0A3C] to-[#39364F] rounded-xl p-6 text-white">
               <h1 className="text-2xl font-bold mb-2">
-                Welcome back, {user?.name?.split(' ')[0] || 'User'}!
+                Welcome back, {user?.name?.split(" ")[0] || "User"}!
               </h1>
               <p className="text-white/70">
-                Discover amazing events and manage your tickets all in one place.
+                Discover amazing events and manage your tickets all in one
+                place.
               </p>
             </div>
 
@@ -186,26 +214,36 @@ const AttendeeDashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <p className="text-sm text-[#6F7287]">Upcoming Events</p>
-                <p className="text-2xl font-bold text-[#1E0A3C]">{stats.upcoming}</p>
+                <p className="text-2xl font-bold text-[#1E0A3C]">
+                  {stats.upcoming}
+                </p>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <p className="text-sm text-[#6F7287]">Past Events</p>
-                <p className="text-2xl font-bold text-[#1E0A3C]">{stats.past}</p>
+                <p className="text-2xl font-bold text-[#1E0A3C]">
+                  {stats.past}
+                </p>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <p className="text-sm text-[#6F7287]">Saved Events</p>
-                <p className="text-2xl font-bold text-[#F05537]">{stats.saved}</p>
+                <p className="text-2xl font-bold text-[#F05537]">
+                  {stats.saved}
+                </p>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <p className="text-sm text-[#6F7287]">Total Spent</p>
-                <p className="text-2xl font-bold text-[#1E0A3C]">{formatCurrency(stats.totalSpent)}</p>
+                <p className="text-2xl font-bold text-[#1E0A3C]">
+                  {formatCurrency(stats.totalSpent)}
+                </p>
               </div>
             </div>
 
             {/* Recent Tickets */}
             <div className="bg-white rounded-xl shadow-sm">
               <div className="p-6 border-b border-[#E6E5E8] flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[#1E0A3C]">Upcoming Tickets</h2>
+                <h2 className="text-lg font-semibold text-[#1E0A3C]">
+                  Upcoming Tickets
+                </h2>
                 <Link
                   to="/attendee/tickets"
                   className="text-[#F05537] hover:text-[#D94E32] text-sm font-medium flex items-center gap-1"
@@ -222,13 +260,16 @@ const AttendeeDashboard = () => {
                         className="flex gap-4 p-4 bg-[#F8F7FA] rounded-lg"
                       >
                         <img
-                          src={ticket.event?.image_url || 'https://res.cloudinary.com/dtbe44muv/image/upload/v1770062126/event-1_ivv30i.jpg'}
-                          alt={ticket.event?.title || 'Event'}
+                          src={
+                            ticket.event?.image_url ||
+                            "https://res.cloudinary.com/dtbe44muv/image/upload/v1770062126/event-1_ivv30i.jpg"
+                          }
+                          alt={ticket.event?.title || "Event"}
                           className="w-20 h-20 rounded-lg object-cover"
                         />
                         <div className="flex-1">
                           <h3 className="font-semibold text-[#1E0A3C] mb-1">
-                            {ticket.event?.title || 'Event'}
+                            {ticket.event?.title || "Event"}
                           </h3>
                           <div className="flex items-center gap-4 text-sm text-[#6F7287]">
                             <span className="flex items-center gap-1">
@@ -241,7 +282,9 @@ const AttendeeDashboard = () => {
                             </span>
                           </div>
                           <p className="text-sm text-[#6F7287] mt-1">
-                            {ticket.quantity} x {ticket.ticket_type_name || 'Ticket'} • {formatCurrency(ticket.total_price)}
+                            {ticket.quantity} x{" "}
+                            {ticket.ticket_type_name || "Ticket"} •{" "}
+                            {formatCurrency(ticket.total_price)}
                           </p>
                         </div>
                       </div>
@@ -253,7 +296,9 @@ const AttendeeDashboard = () => {
                       <Ticket className="w-8 h-8 text-[#A9A8B3]" />
                     </div>
                     <p className="text-[#6F7287] mb-2">No tickets yet</p>
-                    <p className="text-sm text-[#A9A8B3] mb-4">Events you purchase tickets for will appear here</p>
+                    <p className="text-sm text-[#A9A8B3] mb-4">
+                      Events you purchase tickets for will appear here
+                    </p>
                     <Link to="/events">
                       <Button className="bg-[#F05537] hover:bg-[#D94E32]">
                         Browse Events
@@ -267,7 +312,9 @@ const AttendeeDashboard = () => {
             {/* Saved Events */}
             <div className="bg-white rounded-xl shadow-sm">
               <div className="p-6 border-b border-[#E6E5E8] flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[#1E0A3C]">Saved Events</h2>
+                <h2 className="text-lg font-semibold text-[#1E0A3C]">
+                  Saved Events
+                </h2>
                 <Link
                   to="/attendee/saved"
                   className="text-[#F05537] hover:text-[#D94E32] text-sm font-medium flex items-center gap-1"
@@ -285,7 +332,10 @@ const AttendeeDashboard = () => {
                         className="flex gap-4 p-4 border border-[#E6E5E8] rounded-lg hover:border-[#F05537] transition-colors"
                       >
                         <img
-                          src={event.image_url || 'https://res.cloudinary.com/dtbe44muv/image/upload/v1770062126/event-1_ivv30i.jpg'}
+                          src={
+                            event.image_url ||
+                            "https://res.cloudinary.com/dtbe44muv/image/upload/v1770062126/event-1_ivv30i.jpg"
+                          }
                           alt={event.title}
                           className="w-24 h-24 rounded-lg object-cover"
                         />
@@ -316,7 +366,9 @@ const AttendeeDashboard = () => {
                       <Heart className="w-8 h-8 text-[#A9A8B3]" />
                     </div>
                     <p className="text-[#6F7287] mb-2">No saved events</p>
-                    <p className="text-sm text-[#A9A8B3] mb-4">Events you save will appear here for quick access</p>
+                    <p className="text-sm text-[#A9A8B3] mb-4">
+                      Events you save will appear here for quick access
+                    </p>
                     <Link to="/events">
                       <Button className="bg-[#F05537] hover:bg-[#D94E32]">
                         Discover Events

@@ -45,6 +45,7 @@ const VerifyEmail = () => {
           loginSuccess({
             user: data.user,
             token: data.access_token,
+            refreshToken: data.refresh_token,
           })
         );
 

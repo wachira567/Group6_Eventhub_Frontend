@@ -41,16 +41,16 @@ const AdminDashboard = () => {
         const data = await response.json();
         
         setStats({
-          totalUsers: data.overview.total_users,
-          totalEvents: data.overview.total_events,
-          activeEvents: data.overview.published_events,
-          pendingEvents: data.overview.pending_events,
-          totalRevenue: data.overview.revenue,
-          completedTickets: data.overview.completed_tickets,
+          totalUsers: data.stats?.users?.total || 0,
+          totalEvents: data.stats?.events?.total || 0,
+          activeEvents: data.stats?.events?.published || 0,
+          pendingEvents: data.stats?.events?.pending || 0,
+          totalRevenue: data.stats?.revenue?.total || 0,
+          completedTickets: data.stats?.tickets?.total_valid || 0,
         });
 
         // Fetch recent events (pending approval)
-        const eventsRes = await fetch(`${API_BASE_URL}/moderation/events/pending`, {
+        const eventsRes = await fetch(`${API_BASE_URL}/moderation/pending`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         

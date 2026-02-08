@@ -1,48 +1,73 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { X, Minus, Plus, CreditCard, CheckCircle, AlertCircle, Loader2, Smartphone, Mail, User, Ticket, Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { formatCurrency, isValidKenyanPhone, isValidEmail } from '@/utils/helpers';
-import { API_BASE_URL } from '@/utils/constants';
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import {
+  X,
+  Minus,
+  Plus,
+  CreditCard,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Smartphone,
+  Mail,
+  User,
+  Ticket,
+  Download,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  formatCurrency,
+  isValidKenyanPhone,
+  isValidEmail,
+} from "@/utils/helpers";
+import { API_BASE_URL } from "@/utils/constants";
 
-const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
+const TicketPurchaseModal = ({ isOpen, onClose, event, onPurchaseSuccess }) => {
   const navigate = useNavigate();
   const { user, token, isAuthenticated } = useSelector((state) => state.auth);
-  
+
   // State
-  const [step, setStep] = useState('selection'); // 'selection', 'details', 'payment', 'processing', 'success', 'error'
+  const [step, setStep] = useState("selection"); // 'selection', 'details', 'payment', 'processing', 'success', 'error'
   const [selectedTicketType, setSelectedTicketType] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [guestName, setGuestName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [guestName, setGuestName] = useState("");
   const [ticketId, setTicketId] = useState(null);
   const [checkoutRequestId, setCheckoutRequestId] = useState(null);
   const [guestToken, setGuestToken] = useState(null);
   const [error, setError] = useState(null);
   const [pollingInterval, setPollingInterval] = useState(null);
   const [countdown, setCountdown] = useState(60);
-  const [emailError, setEmailError] = useState('');
-  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [isGuestCheckout, setIsGuestCheckout] = useState(false);
+  const [isConfirmingPayment, setIsConfirmingPayment] = useState(false); // Prevent duplicate confirm calls
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen && event?.ticketTypes?.length > 0) {
       setSelectedTicketType(event.ticketTypes[0]);
       setQuantity(1);
-      setStep('selection');
+      setStep("selection");
       setError(null);
-      setEmailError('');
-      setNameError('');
-      setPhoneNumber(user?.phoneNumber || '');
-      setEmail(user?.email || '');
-      setGuestName(user?.name || '');
+      setEmailError("");
+      setNameError("");
+      setIsGuestCheckout(false);
+      // Only pre-fill phone from user data if authenticated
+      if (isAuthenticated && user?.phoneNumber) {
+        setPhoneNumber(user.phoneNumber);
+      } else {
+        setPhoneNumber("");
+      }
+      setEmail(user?.email || "");
+      setGuestName(user?.name || "");
     }
-  }, [isOpen, event, user]);
+  }, [isOpen, event, user, isAuthenticated]);
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -55,8 +80,8 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
 
   // Countdown timer for payment
   useEffect(() => {
-    if (step === 'processing' && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+    if (step === "processing" && countdown > 0) {
+      const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
       return () => clearTimeout(timer);
     }
   }, [step, countdown]);
@@ -79,20 +104,20 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
 
   const formatPhoneForDisplay = (phone) => {
     // Remove non-digits
-    const cleaned = phone.replace(/\D/g, '');
+    const cleaned = phone.replace(/\D/g, "");
     // Format as 07XX XXX XXX
-    if (cleaned.length === 10 && cleaned.startsWith('07')) {
+    if (cleaned.length === 10 && cleaned.startsWith("07")) {
       return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
     }
     return phone;
   };
 
   const formatPhoneForApi = (phone) => {
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('07')) {
-      return '254' + cleaned.slice(1);
+    const cleaned = phone.replace(/\D/g, "");
+    if (cleaned.startsWith("07")) {
+      return "254" + cleaned.slice(1);
     }
-    if (cleaned.startsWith('+')) {
+    if (cleaned.startsWith("+")) {
       return cleaned.slice(1);
     }
     return cleaned;
@@ -101,39 +126,40 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
   // Step 1: Reserve ticket
   const handleReserveTicket = async () => {
     setError(null);
-    
+
     if (!selectedTicketType) {
-      setError('Please select a ticket type');
+      setError("Please select a ticket type");
       return;
     }
 
-    // If not authenticated, show details step first
+    // If not authenticated, show details step first to collect guest info
     if (!isAuthenticated) {
-      setStep('details');
+      setStep("details");
       return;
     }
 
-    // For authenticated users, proceed directly to payment step
+    // For authenticated users, proceed directly to payment - we already have their info from profile
+    // No need to collect details again
     await proceedToReserve();
   };
 
   // Validate guest details and proceed
   const handleGuestDetailsSubmit = async () => {
     setError(null);
-    setEmailError('');
-    setNameError('');
+    setEmailError("");
+    setNameError("");
 
     let hasError = false;
 
     // Validate email
     if (!email || !isValidEmail(email)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError("Please enter a valid email address");
       hasError = true;
     }
 
     // Validate name
     if (!guestName || guestName.trim().length < 2) {
-      setNameError('Please enter your full name');
+      setNameError("Please enter your full name");
       hasError = true;
     }
 
@@ -148,12 +174,12 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
   const proceedToReserve = async () => {
     try {
       const headers = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       };
 
       // Add auth token if available
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
       const body = {
@@ -162,14 +188,29 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
         quantity: quantity,
       };
 
-      // Add guest details if not authenticated
-      if (!isAuthenticated) {
+      // Add guest details if doing guest checkout (either unauthenticated OR authenticated user choosing guest checkout)
+      if (!isAuthenticated || isGuestCheckout) {
         body.email = email;
         body.name = guestName;
+        body.is_guest_checkout = true;
+        console.log(
+          "Guest checkout - sending email:",
+          email,
+          "name:",
+          guestName,
+        );
+      } else {
+        // Explicitly send is_guest_checkout=false for authenticated users
+        // This ensures the backend knows this is NOT a guest checkout
+        body.is_guest_checkout = false;
+        console.log(
+          "Authenticated user checkout - isGuestCheckout:",
+          isGuestCheckout,
+        );
       }
-      
-      const response = await fetch(`${API_BASE_URL}/tickets/purchase`, {
-        method: 'POST',
+
+      const response = await fetch(`${API_BASE_URL}/tickets`, {
+        method: "POST",
         headers: headers,
         body: JSON.stringify(body),
       });
@@ -177,19 +218,25 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to reserve ticket');
+        throw new Error(data.error || "Failed to reserve ticket");
       }
 
       setTicketId(data.ticket.id);
-      
+
       // Store guest token if provided
       if (data.guest_token) {
         setGuestToken(data.guest_token);
         // Store in session storage for persistence
-        sessionStorage.setItem(`guest_token_${data.ticket.id}`, data.guest_token);
+        sessionStorage.setItem(
+          `guest_token_${data.ticket?.id || data.ticket.id}`,
+          data.guest_token,
+        );
+        console.log("Guest token stored:", data.guest_token);
+      } else {
+        console.log("No guest_token in response:", data);
       }
-      
-      setStep('payment');
+
+      setStep("payment");
     } catch (err) {
       setError(err.message);
     }
@@ -200,139 +247,173 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
     setError(null);
 
     if (!isValidKenyanPhone(phoneNumber)) {
-      setError('Please enter a valid Kenyan phone number (07XX XXX XXX or 2547XX XXX XXX)');
+      setError(
+        "Please enter a valid Kenyan phone number (07XX XXX XXX or 2547XX XXX XXX)",
+      );
       return;
     }
 
     if (!ticketId) {
-      setError('Ticket not reserved. Please try again.');
-      setStep('selection');
+      setError("Ticket not reserved. Please try again.");
+      setStep("selection");
       return;
     }
 
-    setStep('processing');
+    setStep("processing");
     setCountdown(60);
 
     try {
       const formattedPhone = formatPhoneForApi(phoneNumber);
-      
+
       const headers = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       };
 
-      // Add auth token if available
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      let initResponse, initData;
+
+      // Use different endpoint for guests vs authenticated users
+      if (isAuthenticated && token) {
+        // For authenticated users, use the standard endpoint
+        initResponse = await fetch(`${API_BASE_URL}/tickets/initiate-payment`, {
+          method: "POST",
+          headers: {
+            ...headers,
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ticket_id: ticketId,
+            phone_number: formattedPhone,
+          }),
+        });
+      } else {
+        // For guests, use the guest payment endpoint
+        // Try to get guest token from state or session storage
+        let storedGuestToken = guestToken;
+        if (!storedGuestToken && ticketId) {
+          storedGuestToken = sessionStorage.getItem(`guest_token_${ticketId}`);
+        }
+
+        console.log(
+          "Guest payment - ticketId:",
+          ticketId,
+          "guestToken:",
+          storedGuestToken,
+        );
+
+        initResponse = await fetch(
+          `${API_BASE_URL}/tickets/guest-initiate-payment`,
+          {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify({
+              ticket_id: ticketId,
+              guest_token: storedGuestToken,
+              phone_number: formattedPhone,
+            }),
+          },
+        );
       }
-      
-      const response = await fetch(`${API_BASE_URL}/mpesa/stkpush`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          ticket_id: ticketId,
-          phone_number: formattedPhone,
-          guest_token: guestToken || sessionStorage.getItem(`guest_token_${ticketId}`),
-        }),
-      });
 
-      const data = await response.json();
+      initData = await initResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to initiate payment');
+      if (!initResponse.ok) {
+        throw new Error(initData.error || "Failed to initiate payment");
       }
 
-      setCheckoutRequestId(data.checkout_request_id);
-      
+      setCheckoutRequestId(initData.checkout_request_id);
+
       // Start polling for payment status
-      startPolling(data.checkout_request_id);
+      startPolling(initData.checkout_request_id);
     } catch (err) {
-      setStep('payment');
+      setStep("payment");
       setError(err.message);
     }
   };
 
   // Poll for payment status
-  const startPolling = useCallback((checkoutId) => {
-    let pollCount = 0;
-    const maxPolls = 24; // 2 minutes (5 seconds * 24)
-    
-    const pollInterval = setInterval(async () => {
-      pollCount++;
-      
-      try {
-        const headers = {};
-        
-        // Add auth or guest token
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
+  const startPolling = useCallback(
+    (checkoutId) => {
+      let pollCount = 0;
+      const maxPolls = 24; // 2 minutes (5 seconds * 24)
 
-        let url = `${API_BASE_URL}/mpesa/status/${checkoutId}`;
-        
-        // For guest users, use guest status endpoint
-        if (!isAuthenticated && guestToken) {
-          url = `${API_BASE_URL}/mpesa/guest-status/${checkoutId}?guest_token=${guestToken}`;
-        }
+      const pollInterval = setInterval(async () => {
+        pollCount++;
 
-        const response = await fetch(url, { headers });
-        const data = await response.json();
+        try {
+          const headers = {};
 
-        if (response.ok && data.transaction) {
-          const status = data.transaction.status;
-          const paymentCompleted = data.payment_completed;
-          
-          // Check both transaction status and ticket payment status
-          if (status === 'completed' || paymentCompleted === true) {
-            clearInterval(pollInterval);
-            setPollingInterval(null);
-            setStep('success');
-            
-            // Auto-redirect after success
-            setTimeout(() => {
-              onClose();
-              if (isAuthenticated) {
-                navigate('/attendee/my-tickets');
+          // Use the existing status endpoint (works for both authenticated and guest users)
+          const url = `${API_BASE_URL}/mpesa/status/${checkoutId}`;
+
+          const response = await fetch(url, { headers });
+          const data = await response.json();
+
+          if (response.ok && data.transaction) {
+            const status = data.transaction.status;
+            const paymentCompleted = data.payment_completed;
+
+            // Check both transaction status and ticket payment status
+            if (status === "completed" || paymentCompleted === true) {
+              clearInterval(pollInterval);
+              setPollingInterval(null);
+              setStep("success");
+
+              // Call success callback if provided
+              if (onPurchaseSuccess) {
+                onPurchaseSuccess();
               }
-            }, 5000);
-          } else if (status === 'failed' || status === 'cancelled') {
-            clearInterval(pollInterval);
-            setPollingInterval(null);
-            setStep('error');
-            setError(data.transaction.result_desc || 'Payment failed or was cancelled');
+
+              // Redirect immediately for authenticated users
+              if (isAuthenticated) {
+                onClose();
+                navigate("/attendee/tickets");
+              }
+            } else if (status === "failed" || status === "cancelled") {
+              clearInterval(pollInterval);
+              setPollingInterval(null);
+              setStep("error");
+              setError(
+                data.transaction.result_desc ||
+                  "Payment failed or was cancelled",
+              );
+            }
+            // If status is still 'pending' or 'processing', continue polling
           }
-          // If status is still 'pending' or 'processing', continue polling
+
+          // If transaction not found yet, continue polling (might still be processing)
+          if (response.status === 404 && pollCount < maxPolls) {
+            console.log("Transaction not found yet, continuing to poll...");
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
         }
-        
-        // If transaction not found yet, continue polling (might still be processing)
-        if (response.status === 404 && pollCount < maxPolls) {
-          console.log('Transaction not found yet, continuing to poll...');
+
+        // Stop polling after max attempts
+        if (pollCount >= maxPolls) {
+          clearInterval(pollInterval);
+          setPollingInterval(null);
+          setStep("payment");
+          setError(
+            "Payment confirmation timed out. If you completed the payment, please check your tickets or email. Otherwise, please try again.",
+          );
         }
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
-      
-      // Stop polling after max attempts
-      if (pollCount >= maxPolls) {
+      }, 5000); // Poll every 5 seconds
+
+      setPollingInterval(pollInterval);
+
+      // Safety timeout - stop polling after 2 minutes
+      setTimeout(() => {
         clearInterval(pollInterval);
-        setPollingInterval(null);
-        setStep('payment');
-        setError('Payment confirmation timed out. If you completed the payment, please check your tickets or email. Otherwise, please try again.');
-      }
-    }, 5000); // Poll every 5 seconds
-
-    setPollingInterval(pollInterval);
-
-    // Safety timeout - stop polling after 2 minutes
-    setTimeout(() => {
-      clearInterval(pollInterval);
-      setPollingInterval((current) => {
-        if (current === pollInterval) {
-          return null;
-        }
-        return current;
-      });
-    }, 125000);
-  }, [token, guestToken, isAuthenticated, navigate, onClose]);
+        setPollingInterval((current) => {
+          if (current === pollInterval) {
+            return null;
+          }
+          return current;
+        });
+      }, 125000);
+    },
+    [token, guestToken, isAuthenticated, navigate, onClose],
+  );
 
   const handleClose = () => {
     if (pollingInterval) {
@@ -345,44 +426,45 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
   // Handle ticket download for guests
   const handleDownloadTicket = async () => {
     try {
-      const storedToken = guestToken || sessionStorage.getItem(`guest_token_${ticketId}`);
+      const storedToken =
+        guestToken || sessionStorage.getItem(`guest_token_${ticketId}`);
       let url = `${API_BASE_URL}/tickets/download/${ticketId}`;
-      
+
       // Add guest token or email as query parameter
       const params = new URLSearchParams();
       if (storedToken) {
-        params.append('guest_token', storedToken);
+        params.append("guest_token", storedToken);
       } else if (email) {
-        params.append('email', email);
+        params.append("email", email);
       }
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to download ticket');
+        throw new Error(errorData.error || "Failed to download ticket");
       }
-      
+
       // Create a blob from the PDF response
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
-      
+
       // Create a temporary link and trigger download
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = downloadUrl;
       link.download = `EventHub_Ticket_${ticketId}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up
       window.URL.revokeObjectURL(downloadUrl);
     } catch (err) {
-      console.error('Download error:', err);
-      setError('Failed to download ticket: ' + err.message);
+      console.error("Download error:", err);
+      setError("Failed to download ticket: " + err.message);
     }
   };
 
@@ -397,19 +479,19 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>
             <h2 className="text-xl font-bold text-[#1E0A3C]">
-              {step === 'selection' && 'Select Tickets'}
-              {step === 'details' && 'Your Details'}
-              {step === 'payment' && 'Payment Details'}
-              {step === 'processing' && 'Processing Payment'}
-              {step === 'success' && 'Payment Successful!'}
-              {step === 'error' && 'Payment Failed'}
+              {step === "selection" && "Select Tickets"}
+              {step === "details" && "Your Details"}
+              {step === "payment" && "Payment Details"}
+              {step === "processing" && "Processing Payment"}
+              {step === "success" && "Payment Successful!"}
+              {step === "error" && "Payment Failed"}
             </h2>
             <p className="text-sm text-[#6F7287] mt-1">{event?.title}</p>
           </div>
           <button
             onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            disabled={step === 'processing'}
+            disabled={step === "processing"}
           >
             <X className="w-5 h-5 text-[#6F7287]" />
           </button>
@@ -425,34 +507,39 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
           )}
 
           {/* Step 1: Ticket Selection */}
-          {step === 'selection' && (
+          {step === "selection" && (
             <div className="space-y-6">
               {/* Guest Checkout Notice */}
               {!isAuthenticated && (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <p className="text-sm text-blue-700">
-                    <strong>Guest Checkout:</strong> You're purchasing as a guest. 
-                    No account required! Your ticket will be emailed to you.
+                    <strong>Guest Checkout:</strong> You're purchasing as a
+                    guest. No account required! Your ticket will be emailed to
+                    you.
                   </p>
                 </div>
               )}
 
               {/* Ticket Types */}
               <div className="space-y-3">
-                <Label className="text-[#1E0A3C] font-semibold">Select Ticket Type</Label>
+                <Label className="text-[#1E0A3C] font-semibold">
+                  Select Ticket Type
+                </Label>
                 {event?.ticketTypes?.map((ticket) => (
                   <button
                     key={ticket.id}
                     onClick={() => handleTicketTypeSelect(ticket)}
                     className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                       selectedTicketType?.id === ticket.id
-                        ? 'border-[#F05537] bg-[#FFF5F3]'
-                        : 'border-gray-200 hover:border-[#F05537]/50'
+                        ? "border-[#F05537] bg-[#FFF5F3]"
+                        : "border-gray-200 hover:border-[#F05537]/50"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-semibold text-[#1E0A3C]">{ticket.name}</p>
+                        <p className="font-semibold text-[#1E0A3C]">
+                          {ticket.name}
+                        </p>
                         <p className="text-sm text-[#6F7287]">
                           {ticket.available} tickets available
                         </p>
@@ -486,7 +573,10 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                   </span>
                   <button
                     onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= Math.min(10, selectedTicketType?.available || 10)}
+                    disabled={
+                      quantity >=
+                      Math.min(10, selectedTicketType?.available || 10)
+                    }
                     className="w-12 h-12 rounded-xl border-2 border-gray-200 flex items-center justify-center disabled:opacity-40 hover:border-[#F05537] transition-colors"
                   >
                     <Plus className="w-5 h-5" />
@@ -516,17 +606,18 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 onClick={handleReserveTicket}
                 className="w-full bg-[#F05537] hover:bg-[#D94E32] text-white py-6 h-auto text-lg font-semibold"
               >
-                {isAuthenticated ? 'Continue to Payment' : 'Continue as Guest'}
+                {isAuthenticated ? "Buy Now" : "Continue as Guest"}
               </Button>
             </div>
           )}
 
           {/* Step 2: Guest Details (for non-authenticated users) */}
-          {step === 'details' && (
+          {step === "details" && (
             <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <p className="text-sm text-blue-700">
-                  Please enter your details. Your ticket will be sent to your email address.
+                  Please enter your details. Your ticket will be sent to your
+                  email address.
                 </p>
               </div>
 
@@ -534,10 +625,16 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
               <div className="bg-gray-50 rounded-xl p-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-semibold text-[#1E0A3C]">{selectedTicketType?.name}</p>
-                    <p className="text-sm text-[#6F7287]">Quantity: {quantity}</p>
+                    <p className="font-semibold text-[#1E0A3C]">
+                      {selectedTicketType?.name}
+                    </p>
+                    <p className="text-sm text-[#6F7287]">
+                      Quantity: {quantity}
+                    </p>
                   </div>
-                  <p className="font-bold text-[#F05537] text-xl">{formatCurrency(totalPrice)}</p>
+                  <p className="font-bold text-[#F05537] text-xl">
+                    {formatCurrency(totalPrice)}
+                  </p>
                 </div>
               </div>
 
@@ -545,7 +642,10 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
               <div className="space-y-4">
                 {/* Name Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="guest-name" className="text-[#1E0A3C] font-semibold">
+                  <Label
+                    htmlFor="guest-name"
+                    className="text-[#1E0A3C] font-semibold"
+                  >
                     Full Name <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
@@ -568,7 +668,10 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
 
                 {/* Email Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="guest-email" className="text-[#1E0A3C] font-semibold">
+                  <Label
+                    htmlFor="guest-email"
+                    className="text-[#1E0A3C] font-semibold"
+                  >
                     Email Address <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
@@ -596,7 +699,10 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setStep('selection')}
+                  onClick={() => {
+                    setStep("selection");
+                    setIsGuestCheckout(false);
+                  }}
                   className="flex-1 py-6 h-auto"
                 >
                   Back
@@ -612,16 +718,22 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
           )}
 
           {/* Step 3: Payment Details */}
-          {step === 'payment' && (
+          {step === "payment" && (
             <div className="space-y-6">
               {/* Order Summary */}
               <div className="bg-gray-50 rounded-xl p-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-semibold text-[#1E0A3C]">{selectedTicketType?.name}</p>
-                    <p className="text-sm text-[#6F7287]">Quantity: {quantity}</p>
+                    <p className="font-semibold text-[#1E0A3C]">
+                      {selectedTicketType?.name}
+                    </p>
+                    <p className="text-sm text-[#6F7287]">
+                      Quantity: {quantity}
+                    </p>
                   </div>
-                  <p className="font-bold text-[#F05537] text-xl">{formatCurrency(totalPrice)}</p>
+                  <p className="font-bold text-[#F05537] text-xl">
+                    {formatCurrency(totalPrice)}
+                  </p>
                 </div>
               </div>
 
@@ -630,7 +742,9 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
                   <Mail className="w-5 h-5 text-green-600" />
                   <div>
-                    <p className="text-sm font-medium text-green-800">Ticket will be sent to:</p>
+                    <p className="text-sm font-medium text-green-800">
+                      Ticket will be sent to:
+                    </p>
                     <p className="text-sm text-green-700">{email}</p>
                   </div>
                 </div>
@@ -643,7 +757,9 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                     <Smartphone className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-green-800">MPESA STK Push</p>
+                    <p className="font-semibold text-green-800">
+                      MPESA STK Push
+                    </p>
                     <p className="text-sm text-green-600">
                       Enter your MPESA number to receive a payment prompt
                     </p>
@@ -651,7 +767,10 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-[#1E0A3C] font-semibold">
+                  <Label
+                    htmlFor="phone"
+                    className="text-[#1E0A3C] font-semibold"
+                  >
                     MPESA Phone Number
                   </Label>
                   <div className="relative">
@@ -673,7 +792,9 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 </div>
 
                 <div className="bg-amber-50 rounded-xl p-4 space-y-2">
-                  <p className="font-medium text-amber-800 text-sm">What happens next?</p>
+                  <p className="font-medium text-amber-800 text-sm">
+                    What happens next?
+                  </p>
                   <ul className="text-sm text-amber-700 space-y-1">
                     <li className="flex items-start gap-2">
                       <span className="text-amber-500">1.</span>
@@ -685,7 +806,8 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-amber-500">3.</span>
-                      Your ticket will be confirmed and emailed to you automatically
+                      Your ticket will be confirmed and emailed to you
+                      automatically
                     </li>
                   </ul>
                 </div>
@@ -694,7 +816,9 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setStep(isAuthenticated ? 'selection' : 'details')}
+                  onClick={() =>
+                    setStep(isAuthenticated ? "selection" : "details")
+                  }
                   className="flex-1 py-6 h-auto"
                 >
                   Back
@@ -712,7 +836,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
           )}
 
           {/* Step 4: Processing */}
-          {step === 'processing' && (
+          {step === "processing" && (
             <div className="text-center py-8 space-y-6">
               <div className="relative w-24 h-24 mx-auto">
                 <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
@@ -723,7 +847,9 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-[#1E0A3C]">Processing Payment...</h3>
+                <h3 className="text-xl font-bold text-[#1E0A3C]">
+                  Processing Payment...
+                </h3>
                 <p className="text-[#6F7287]">
                   Please check your phone and enter your MPESA PIN
                 </p>
@@ -738,7 +864,9 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[#6F7287]">Amount:</span>
-                  <span className="font-bold text-[#F05537]">{formatCurrency(totalPrice)}</span>
+                  <span className="font-bold text-[#F05537]">
+                    {formatCurrency(totalPrice)}
+                  </span>
                 </div>
               </div>
 
@@ -746,48 +874,105 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 Waiting for confirmation...
                 <span className="block mt-1 font-mono">{countdown}s</span>
               </div>
-              
+
               <div className="bg-blue-50 rounded-xl p-4 text-left">
                 <p className="text-sm text-blue-700">
-                  <strong>Did you complete the payment?</strong><br/>
-                  If you entered your MPESA PIN and received a confirmation SMS, 
+                  <strong>Did you complete the payment?</strong>
+                  <br />
+                  If you entered your MPESA PIN and received a confirmation SMS,
                   click "Check Status" below.
                 </p>
               </div>
-              
+
               {/* Development-only: Simulate Payment button */}
               {import.meta.env.DEV && (
                 <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-left">
-                  <p className="text-xs text-purple-600 font-medium mb-2">🛠️ DEVELOPMENT MODE</p>
+                  <p className="text-xs text-purple-600 font-medium mb-2">
+                    🛠️ DEVELOPMENT MODE
+                  </p>
                   <p className="text-sm text-purple-700 mb-3">
-                    Since M-Pesa callbacks can't reach localhost, use this button to simulate a successful payment.
+                    Since M-Pesa callbacks can't reach localhost, use this
+                    button to simulate a successful payment.
                   </p>
                   <Button
                     onClick={async () => {
+                      // Prevent multiple clicks
+                      if (isConfirmingPayment) return;
+                      setIsConfirmingPayment(true);
+
                       try {
-                        const headers = {'Content-Type': 'application/json'};
-                        if (token) headers['Authorization'] = `Bearer ${token}`;
-                        
-                        const response = await fetch(`${API_BASE_URL}/mpesa/simulate-complete/${checkoutRequestId}`, {
-                          method: 'POST',
-                          headers
-                        });
-                        
-                        if (response.ok) {
-                          clearInterval(pollingInterval);
-                          setPollingInterval(null);
-                          setStep('success');
+                        const headers = { "Content-Type": "application/json" };
+                        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+                        // First, simulate payment completion
+                        const simResponse = await fetch(
+                          `${API_BASE_URL}/mpesa/simulate-complete/${checkoutRequestId}`,
+                          {
+                            method: "POST",
+                            headers,
+                          },
+                        );
+
+                        if (simResponse.ok) {
+                          // Then, confirm payment to create tickets and send email
+                          const simData = await simResponse.json();
+                          const transactionId = simData.transaction?.id;
+
+                          if (!transactionId) {
+                            setError("Could not get transaction ID");
+                            setIsConfirmingPayment(false);
+                            return;
+                          }
+
+                          // Use confirm-payment endpoint which now handles guests
+                          const confirmResponse = await fetch(
+                            `${API_BASE_URL}/tickets/confirm-payment`,
+                            {
+                              method: "POST",
+                              headers,
+                              body: JSON.stringify({
+                                transaction_id: transactionId,
+                                checkout_request_id: checkoutRequestId,
+                                payment_method: "mpesa",
+                              }),
+                            },
+                          );
+
+                          if (confirmResponse.ok) {
+                            clearInterval(pollingInterval);
+                            setPollingInterval(null);
+                            setStep("success");
+
+                            // Call success callback if provided
+                            if (onPurchaseSuccess) {
+                              onPurchaseSuccess();
+                            }
+
+                            // Redirect immediately for authenticated users
+                            if (isAuthenticated) {
+                              onClose();
+                              navigate("/attendee/tickets");
+                            }
+                          } else {
+                            const errorData = await confirmResponse.json();
+                            setError(
+                              errorData.error || "Failed to confirm payment",
+                            );
+                          }
                         } else {
-                          const data = await response.json();
-                          setError(data.error || 'Simulation failed');
+                          const data = await simResponse.json();
+                          setError(data.error || "Simulation failed");
                         }
                       } catch (err) {
-                        setError('Simulation error: ' + err.message);
+                        setError("Simulation error: " + err.message);
+                      } finally {
+                        setIsConfirmingPayment(false);
                       }
                     }}
+                    disabled={isConfirmingPayment}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                   >
-                    Simulate Successful Payment
+                    {isConfirmingPayment ? "Processing..." : "Simulate Successful Payment"}
                   </Button>
                 </div>
               )}
@@ -800,8 +985,8 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                       clearInterval(pollingInterval);
                       setPollingInterval(null);
                     }
-                    setStep('payment');
-                    setError('Payment was cancelled. You can try again.');
+                    setStep("payment");
+                    setError("Payment was cancelled. You can try again.");
                   }}
                   className="flex-1"
                 >
@@ -809,40 +994,75 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 </Button>
                 <Button
                   onClick={async () => {
-                    // Manual status check
+                    // Manual status check - /mpesa/status doesn't require auth, so guests can use it
                     try {
                       const headers = {};
-                      if (token) {
-                        headers['Authorization'] = `Bearer ${token}`;
-                      }
-                      
-                      let url = `${API_BASE_URL}/mpesa/status/${checkoutRequestId}`;
-                      if (!isAuthenticated && guestToken) {
-                        url = `${API_BASE_URL}/mpesa/guest-status/${checkoutRequestId}?guest_token=${guestToken}`;
-                      }
-                      
+
+                      // Use the existing status endpoint (works for both authenticated and guest users)
+                      const url = `${API_BASE_URL}/mpesa/status/${checkoutRequestId}`;
+
                       const response = await fetch(url, { headers });
                       const data = await response.json();
-                      
-                      if (response.ok && (data.transaction?.status === 'completed' || data.payment_completed)) {
+
+                      if (
+                        response.ok &&
+                        (data.transaction?.status === "completed" ||
+                          data.payment_completed)
+                      ) {
+                        // Payment completed, confirm the ticket
+                        const confirmResponse = await fetch(
+                          `${API_BASE_URL}/tickets/confirm-payment`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              ...(token && {
+                                Authorization: `Bearer ${token}`,
+                              }),
+                            },
+                            body: JSON.stringify({
+                              checkout_request_id: checkoutRequestId,
+                              payment_method: "mpesa",
+                            }),
+                          },
+                        );
+
+                        if (confirmResponse.ok) {
+                          clearInterval(pollingInterval);
+                          setPollingInterval(null);
+                          setStep("success");
+
+                          // Call success callback if provided
+                          if (onPurchaseSuccess) {
+                            onPurchaseSuccess();
+                          }
+
+                          // Redirect immediately for authenticated users
+                          if (isAuthenticated) {
+                            onClose();
+                            navigate("/attendee/tickets");
+                          }
+                        } else {
+                          const confirmData = await confirmResponse.json();
+                          setError(
+                            confirmData.error || "Failed to confirm payment",
+                          );
+                        }
+                      } else if (data.transaction?.status === "failed") {
                         clearInterval(pollingInterval);
                         setPollingInterval(null);
-                        setStep('success');
-                        setTimeout(() => {
-                          onClose();
-                          if (isAuthenticated) navigate('/attendee/my-tickets');
-                        }, 3000);
-                      } else if (data.transaction?.status === 'failed') {
-                        clearInterval(pollingInterval);
-                        setPollingInterval(null);
-                        setStep('error');
-                        setError(data.transaction.result_desc || 'Payment failed');
+                        setStep("error");
+                        setError(
+                          data.transaction.result_desc || "Payment failed",
+                        );
                       } else {
-                        setError('Payment still processing. Please wait a moment and try again.');
+                        setError(
+                          "Payment still processing. Please wait a moment and try again.",
+                        );
                         setTimeout(() => setError(null), 3000);
                       }
                     } catch (err) {
-                      setError('Unable to check status. Please try again.');
+                      setError("Unable to check status. Please try again.");
                     }
                   }}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
@@ -854,14 +1074,16 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
           )}
 
           {/* Step 5: Success */}
-          {step === 'success' && (
+          {step === "success" && (
             <div className="text-center py-8 space-y-6">
               <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle className="w-12 h-12 text-green-600" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-[#1E0A3C]">Payment Successful!</h3>
+                <h3 className="text-xl font-bold text-[#1E0A3C]">
+                  Payment Successful!
+                </h3>
                 <p className="text-[#6F7287]">
                   Your tickets have been confirmed and sent to your email
                 </p>
@@ -881,7 +1103,9 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#6F7287]">Ticket:</span>
-                  <span className="font-medium text-[#1E0A3C]">{selectedTicketType?.name}</span>
+                  <span className="font-medium text-[#1E0A3C]">
+                    {selectedTicketType?.name}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#6F7287]">Quantity:</span>
@@ -889,14 +1113,18 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                 </div>
                 <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
                   <span className="text-[#6F7287]">Total Paid:</span>
-                  <span className="font-bold text-[#F05537]">{formatCurrency(totalPrice)}</span>
+                  <span className="font-bold text-[#F05537]">
+                    {formatCurrency(totalPrice)}
+                  </span>
                 </div>
               </div>
 
               <div className="bg-amber-50 rounded-xl p-4 text-left">
-                <p className="text-sm font-medium text-amber-800 mb-2">📱 Your Ticket</p>
+                <p className="text-sm font-medium text-amber-800 mb-2">
+                  📱 Your Ticket
+                </p>
                 <p className="text-sm text-amber-700">
-                  A PDF ticket with a QR code has been sent to your email. 
+                  A PDF ticket with a QR code has been sent to your email.
                   Please present it at the event entrance for scanning.
                 </p>
               </div>
@@ -909,7 +1137,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                   <Button
                     onClick={() => {
                       onClose();
-                      navigate('/attendee/my-tickets');
+                      navigate("/attendee/tickets");
                     }}
                     className="w-full bg-[#F05537] hover:bg-[#D94E32] text-white py-6 h-auto text-lg font-semibold"
                   >
@@ -928,7 +1156,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                     <Download className="w-5 h-5 mr-2" />
                     Download Ticket PDF
                   </Button>
-                  
+
                   <p className="text-sm text-[#6F7287]">
                     Want to keep track of your tickets? Create an account!
                   </p>
@@ -943,7 +1171,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                     <Button
                       onClick={() => {
                         onClose();
-                        navigate('/register');
+                        navigate("/register");
                       }}
                       className="flex-1 bg-[#F05537] hover:bg-[#D94E32] text-white py-6 h-auto"
                     >
@@ -956,15 +1184,19 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
           )}
 
           {/* Step 6: Error */}
-          {step === 'error' && (
+          {step === "error" && (
             <div className="text-center py-8 space-y-6">
               <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto">
                 <AlertCircle className="w-12 h-12 text-red-600" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-[#1E0A3C]">Payment Failed</h3>
-                <p className="text-[#6F7287]">{error || 'Something went wrong with your payment'}</p>
+                <h3 className="text-xl font-bold text-[#1E0A3C]">
+                  Payment Failed
+                </h3>
+                <p className="text-[#6F7287]">
+                  {error || "Something went wrong with your payment"}
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -976,7 +1208,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event }) => {
                   Close
                 </Button>
                 <Button
-                  onClick={() => setStep('payment')}
+                  onClick={() => setStep("payment")}
                   className="flex-1 bg-[#F05537] hover:bg-[#D94E32] text-white py-6 h-auto text-lg font-semibold"
                 >
                   Try Again

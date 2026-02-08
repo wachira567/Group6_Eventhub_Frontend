@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Calendar, PlusCircle, Search, Filter, Edit, BarChart3, Users, Eye, ChevronLeft, MoreVertical, Loader2, Trash2, EyeOff } from 'lucide-react';
+import { Calendar, PlusCircle, Search, Filter, Edit, BarChart3, Users, Eye, ChevronLeft, MoreVertical, Loader2, Trash2, EyeOff, QrCode } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { formatDate, formatCurrency } from '../../utils/helpers';
 import { API_BASE_URL } from '../../utils/constants';
@@ -19,14 +19,17 @@ const MyEvents = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMyEvents();
-  }, []);
+    fetchMyEvents(statusFilter);
+  }, [statusFilter]);
 
-  const fetchMyEvents = async () => {
+  const fetchMyEvents = async (status = 'all') => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/events/my-events`, {
+      const url = status === 'all' 
+        ? `${API_BASE_URL}/events/my-events`
+        : `${API_BASE_URL}/events/my-events?status=${status}`;
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -131,7 +134,9 @@ const MyEvents = () => {
     }
     const badges = {
       published: 'bg-green-100 text-green-700',
+      approved: 'bg-blue-100 text-blue-700',
       draft: 'bg-yellow-100 text-yellow-700',
+      pending: 'bg-orange-100 text-orange-700',
       cancelled: 'bg-red-100 text-red-700',
     };
     return badges[status] || badges.draft;
@@ -187,6 +192,7 @@ const MyEvents = () => {
                   >
                     <option value="all">All Status</option>
                     <option value="published">Published</option>
+                    <option value="approved">Approved</option>
                     <option value="draft">Draft</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
@@ -283,6 +289,12 @@ const MyEvents = () => {
                                   <Button variant="outline" size="sm">
                                     <Users className="w-4 h-4 mr-2" />
                                     Attendees
+                                  </Button>
+                                </Link>
+                                <Link to={`/organizer/scan-tickets/${event.id}`}>
+                                  <Button variant="outline" size="sm">
+                                    <QrCode className="w-4 h-4 mr-2" />
+                                    Scan Tickets
                                   </Button>
                                 </Link>
                                 <Link to={`/events/${event.id}`}>
