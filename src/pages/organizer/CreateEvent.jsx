@@ -139,12 +139,13 @@ const CreateEvent = () => {
       const eventPayload = {
         title: formData.title,
         description: formData.description,
-        location: formData.location,
-        city: formData.address.split(',').pop()?.trim() || formData.location,
         category: formData.category,
         tags: formData.tags,
-        coordinates: formData.coordinates,
-        venue_address: formData.address,
+        venue: formData.location,
+        address: formData.address,
+        city: formData.address.split(',').pop()?.trim() || formData.location,
+        latitude: formData.coordinates?.lat,
+        longitude: formData.coordinates?.lng,
         image_url: formData.imageUrl,
         start_date: startDateTime.toISOString(),
         end_date: endDateTime.toISOString(),
@@ -152,7 +153,7 @@ const CreateEvent = () => {
           name: t.name,
           description: '',
           price: parseFloat(t.price),
-          quantity_total: parseInt(t.quantity),
+          quantity: parseInt(t.quantity),
         })),
       };
 

@@ -11,11 +11,13 @@ const getUserFromStorage = () => {
 };
 
 const token = localStorage.getItem('token');
+const refreshToken = localStorage.getItem('refreshToken');
 const user = getUserFromStorage();
 
 const initialState = {
   user: user,
   token: token,
+  refreshToken: refreshToken,
   isAuthenticated: !!token && !!user, // Only authenticated if both token and user exist
   role: user?.role || null,
   loading: false,
@@ -35,9 +37,11 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.refreshToken = action.payload.refreshToken;
       state.role = action.payload.user.role;
       // Persist to localStorage
       localStorage.setItem('token', action.payload.token);
+      localStorage.setItem('refreshToken', action.payload.refreshToken);
       localStorage.setItem('user', JSON.stringify(action.payload.user));
     },
     loginFailure: (state, action) => {
@@ -47,10 +51,12 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
       state.role = null;
       // Clear localStorage
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
     },
     updateUser: (state, action) => {
@@ -64,13 +70,23 @@ const authSlice = createSlice({
     // Action to restore auth state (useful after page refresh)
     restoreAuth: (state) => {
       const storedToken = localStorage.getItem('token');
+      const storedRefreshToken = localStorage.getItem('refreshToken');
       const storedUser = getUserFromStorage();
       if (storedToken && storedUser) {
         state.token = storedToken;
+        state.refreshToken = storedRefreshToken;
         state.user = storedUser;
         state.isAuthenticated = true;
         state.role = storedUser.role;
       }
+    },
+    // Action to set new tokens (used during token refresh)
+    setTokens: (state, action) => {
+      state.token = action.payload.token;
+      state.refreshToken = action.payload.refreshToken;
+      // Persist to localStorage
+      localStorage.setItem('token', action.payload.token);
+      localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
   },
 });
@@ -83,6 +99,7 @@ export const {
   updateUser,
   clearError,
   restoreAuth,
+  setTokens,
 } = authSlice.actions;
 
 export default authSlice.reducer;

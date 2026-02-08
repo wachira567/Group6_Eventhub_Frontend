@@ -20,19 +20,48 @@ const EventAnalytics = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/analytics/event/${id}`, {
+      if (!token) {
+        toast.error('Please log in to view analytics');
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch main analytics
+      const analyticsResponse = await fetch(`${API_BASE_URL}/analytics/event/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch analytics');
+      if (!analyticsResponse.ok) {
+        const errorData = await analyticsResponse.json();
+        throw new Error(errorData?.error || 'Failed to fetch analytics');
       }
 
-      const data = await response.json();
-      setAnalytics(data);
-      setEvent(data.event);
+      const analyticsData = await analyticsResponse.json();
+      setAnalytics(analyticsData.stats);
+      setEvent(analyticsData.stats.event);
+      
+      // Fetch daily sales timeline
+      const timelineResponse = await fetch(`${API_BASE_URL}/analytics/event/${id}/sales-timeline?period=${timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (timelineResponse.ok) {
+        const timelineData = await timelineResponse.json();
+        // Transform to match frontend format
+        const transformedTimeline = (timelineData.timeline || []).map(day => ({
+          date: day.date,
+          tickets: day.tickets_sold,
+          revenue: day.revenue
+        }));
+        setAnalytics(prev => ({
+          ...prev,
+          daily_sales: transformedTimeline
+        }));
+      }
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast.error('Failed to load analytics data');
@@ -49,7 +78,16 @@ const EventAnalytics = () => {
   };
 
   useEffect(() => {
-    fetchEventAnalytics();
+    const fetchData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        // User not logged in, stop loading
+        setLoading(false);
+        return;
+      }
+      fetchEventAnalytics();
+    };
+    fetchData();
   }, [id]);
 
   // Filter daily sales based on time range (show from current date backwards)
@@ -63,7 +101,7 @@ const EventAnalytics = () => {
 
   // Calculate summary stats from real data
   const getSummaryStats = () => {
-    if (!analytics?.overview) {
+    if (!analytics?.tickets) {
       return {
         ticketsSold: 0,
         totalTickets: 0,
@@ -71,11 +109,11 @@ const EventAnalytics = () => {
       };
     }
 
-    const { overview } = analytics;
+    const { tickets } = analytics;
     return {
-      ticketsSold: overview.tickets_sold || 0,
-      totalTickets: overview.total_tickets || 0,
-      revenue: overview.revenue || 0,
+      ticketsSold: tickets.total_sold || 0,
+      totalTickets: tickets.total_available || 0,
+      revenue: tickets.total_revenue || 0,
     };
   };
 
@@ -254,19 +292,19 @@ const EventAnalytics = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
               <h2 className="text-lg font-semibold text-[#1E0A3C] mb-4">Ticket Sales by Type</h2>
               <div className="space-y-4">
-                {analytics.ticket_sales?.length > 0 ? (
-                  analytics.ticket_sales.map((ticket) => (
-                    <div key={ticket.type} className="flex items-center justify-between p-4 bg-[#F8F7FA] rounded-lg">
+                {analytics?.tickets?.by_type?.length > 0 ? (
+                  analytics.tickets.by_type.map((ticket) => (
+                    <div key={ticket.id} className="flex items-center justify-between p-4 bg-[#F8F7FA] rounded-lg">
                       <div>
-                        <p className="font-medium text-[#39364F]">{ticket.type}</p>
-                        <p className="text-sm text-[#6F7287]">{ticket.sold} sold of {ticket.total}</p>
+                        <p className="font-medium text-[#39364F]">{ticket.name}</p>
+                        <p className="text-sm text-[#6F7287]">{ticket.sold} sold of {ticket.quantity}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-[#F05537]">{formatCurrency(ticket.revenue)}</p>
                         <div className="w-24 bg-[#E6E5E8] rounded-full h-2 mt-1">
                           <div
                             className="bg-[#F05537] h-2 rounded-full"
-                            style={{ width: `${ticket.total > 0 ? (ticket.sold / ticket.total) * 100 : 0}%` }}
+                            style={{ width: `${ticket.quantity > 0 ? (ticket.sold / ticket.quantity) * 100 : 0}%` }}
                           />
                         </div>
                       </div>

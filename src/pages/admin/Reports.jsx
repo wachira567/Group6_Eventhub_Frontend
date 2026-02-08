@@ -1,144 +1,137 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { ChevronLeft, Download, FileText, Calendar, DollarSign, Users, TrendingUp, Filter, Loader2, FileSpreadsheet } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { API_BASE_URL } from '../../utils/constants';
+import { 
+  ChevronLeft, Download, FileText, Calendar, DollarSign, 
+  Users, TrendingUp, Filter, Loader2, FileSpreadsheet,
+  BarChart3, PieChart
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { API_BASE_URL } from '@/utils/constants';
 
 const reportTemplates = [
   {
     id: 'overview',
     name: 'Platform Overview',
-    description: 'Complete platform statistics and metrics',
     icon: TrendingUp,
-    color: 'bg-blue-100 text-blue-600',
   },
   {
     id: 'revenue',
     name: 'Revenue Report',
-    description: 'Revenue breakdown and financial analytics',
     icon: DollarSign,
-    color: 'bg-green-100 text-green-600',
   },
   {
     id: 'events',
     name: 'Event Performance',
-    description: 'Event statistics and ticket sales analysis',
     icon: Calendar,
-    color: 'bg-purple-100 text-purple-600',
   },
   {
     id: 'users',
     name: 'User Analytics',
-    description: 'User growth and engagement metrics',
     icon: Users,
-    color: 'bg-orange-100 text-orange-600',
-  },
-  {
-    id: 'full',
-    name: 'Full Report',
-    description: 'Complete platform report with all data',
-    icon: FileText,
-    color: 'bg-red-100 text-red-600',
   },
 ];
 
 const Reports = () => {
   const { token } = useSelector((state) => state.auth);
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [generating, setGenerating] = useState(null);
-  const [reportType, setReportType] = useState('overview');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
+  const [reportData, setReportData] = useState(null);
+  const [eventsData, setEventsData] = useState([]);
+  const [usersData, setUsersData] = useState([]);
+  
+  // Filters
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [format, setFormat] = useState('pdf');
+  const [eventType, setEventType] = useState('all');
+  
+  // Export states
+  const [exporting, setExporting] = useState(null);
 
-  const handleDownloadPDF = async (templateId) => {
+  // Fetch report data
+  const fetchReportData = async () => {
     try {
-      setGenerating(templateId);
+      setLoading(true);
       
-      const response = await fetch(`${API_BASE_URL}/reports/generate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ type: templateId }),
+      // Build query params
+      const params = new URLSearchParams();
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
+      if (eventType !== 'all') params.append('type', eventType);
+      
+      // Fetch overview stats
+      const overviewRes = await fetch(`${API_BASE_URL}/reports/analytics?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate report');
-      }
-
-      // Get the blob and download
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `eventhub_${templateId}_report_${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const overviewData = await overviewRes.json();
+      setReportData(overviewData);
       
-      setShowGenerateModal(false);
+      // Fetch events export data
+      const eventsRes = await fetch(`${API_BASE_URL}/reports/events/export?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const eventsResult = await eventsRes.json();
+      setEventsData(eventsResult.events || []);
+      
+      // Fetch users export data
+      const usersRes = await fetch(`${API_BASE_URL}/reports/users/export?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const usersResult = await usersRes.json();
+      setUsersData(usersResult.users || []);
+      
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF report');
+      console.error('Error fetching report data:', error);
     } finally {
-      setGenerating(null);
+      setLoading(false);
     }
   };
 
-  const handleDownloadCSV = async (exportType) => {
+  // Fetch data when filters change
+  useEffect(() => {
+    if (token) {
+      fetchReportData();
+    }
+  }, [token, startDate, endDate, eventType]);
+
+  // Handle CSV export
+  const handleExport = async (type) => {
     try {
-      setGenerating(exportType);
+      setExporting(type);
+      
+      const params = new URLSearchParams();
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
       
       let endpoint = '';
-      switch (exportType) {
-        case 'users':
-          endpoint = '/reports/users/export';
-          break;
-        case 'events':
-          endpoint = '/reports/events/export';
-          break;
-        case 'tickets':
-          endpoint = '/reports/tickets/export';
-          break;
-        default:
-          return;
+      switch (type) {
+        case 'users': endpoint = `/reports/users/export?${params}`; break;
+        case 'events': endpoint = `/reports/events/export?${params}`; break;
+        case 'tickets': endpoint = `/reports/tickets/export?${params}`; break;
+        default: return;
       }
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to export data');
-      }
+      if (!response.ok) throw new Error('Export failed');
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${exportType}_export_${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `${type}_export_${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Error exporting CSV:', error);
-      alert('Failed to export CSV');
+      console.error('Error exporting:', error);
+      alert('Failed to export data');
     } finally {
-      setGenerating(null);
-    }
-  };
-
-  const handleGenerateReport = () => {
-    if (format === 'pdf') {
-      handleDownloadPDF(reportType);
+      setExporting(null);
     }
   };
 
@@ -155,251 +148,362 @@ const Reports = () => {
         </Link>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h1 className="text-2xl font-bold text-[#1E0A3C]">Reports</h1>
-          <Button
-            onClick={() => setShowGenerateModal(true)}
-            className="bg-[#F05537] hover:bg-[#D94E32]"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Generate Report
-          </Button>
+          <h1 className="text-2xl font-bold text-[#1E0A3C]">Reports & Analytics</h1>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => handleExport('events')} disabled={exporting === 'events'}>
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Export Events
+            </Button>
+            <Button variant="outline" onClick={() => handleExport('users')} disabled={exporting === 'users'}>
+              <Users className="w-4 h-4 mr-2" />
+              Export Users
+            </Button>
+            <Button variant="outline" onClick={() => handleExport('tickets')} disabled={exporting === 'tickets'}>
+              <FileText className="w-4 h-4 mr-2" />
+              Export Tickets
+            </Button>
+          </div>
         </div>
 
-        {/* Report Templates */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {reportTemplates.map((template) => (
-            <button
-              key={template.id}
-              onClick={() => {
-                setReportType(template.id);
-                setShowGenerateModal(true);
-              }}
-              className="bg-white rounded-xl p-6 shadow-sm text-left hover:shadow-md transition-shadow"
-            >
-              <div className={`w-12 h-12 ${template.color} rounded-lg flex items-center justify-center mb-4`}>
-                <template.icon className="w-6 h-6" />
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#39364F] mb-2">Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
+                />
               </div>
-              <h3 className="font-semibold text-[#1E0A3C] mb-1">{template.name}</h3>
-              <p className="text-sm text-[#6F7287]">{template.description}</p>
-            </button>
+              <div>
+                <label className="block text-sm font-medium text-[#39364F] mb-2">End Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#39364F] mb-2">Event Status</label>
+                <select
+                  value={eventType}
+                  onChange={(e) => setEventType(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
+                >
+                  <option value="all">All Events</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
+              <div className="flex items-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setStartDate('');
+                    setEndDate('');
+                    setEventType('all');
+                  }}
+                  className="w-full"
+                >
+                  <Filter className="w-4 h-4 mr-2" />
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {reportTemplates.map((template) => (
+            <Button
+              key={template.id}
+              variant={activeTab === template.id ? 'default' : 'outline'}
+              onClick={() => setActiveTab(template.id)}
+              className={activeTab === template.id ? 'bg-[#F05537] hover:bg-[#D94E32]' : ''}
+            >
+              <template.icon className="w-4 h-4 mr-2" />
+              {template.name}
+            </Button>
           ))}
         </div>
 
-        {/* Quick Export Section */}
-        <div className="bg-white rounded-xl shadow-sm mb-8">
-          <div className="p-6 border-b border-[#E6E5E8]">
-            <h2 className="text-lg font-semibold text-[#1E0A3C]">Quick Export (CSV)</h2>
-            <p className="text-sm text-[#6F7287] mt-1">Download data in CSV format for further analysis</p>
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 animate-spin text-[#F05537]" />
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button
-                onClick={() => handleDownloadCSV('users')}
-                disabled={generating === 'users'}
-                className="flex items-center gap-4 p-4 bg-[#F8F7FA] rounded-lg hover:bg-[#E6E5E8] transition-colors disabled:opacity-50"
-              >
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-green-600" />
-                </div>
-                <div className="text-left">
-                  <p className="font-medium text-[#39364F]">Users Export</p>
-                  <p className="text-sm text-[#6F7287]">Download all user data</p>
-                </div>
-                {generating === 'users' && (
-                  <Loader2 className="w-5 h-5 animate-spin ml-auto" />
-                )}
-              </button>
-
-              <button
-                onClick={() => handleDownloadCSV('events')}
-                disabled={generating === 'events'}
-                className="flex items-center gap-4 p-4 bg-[#F8F7FA] rounded-lg hover:bg-[#E6E5E8] transition-colors disabled:opacity-50"
-              >
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-purple-600" />
-                </div>
-                <div className="text-left">
-                  <p className="font-medium text-[#39364F]">Events Export</p>
-                  <p className="text-sm text-[#6F7287]">Download all events data</p>
-                </div>
-                {generating === 'events' && (
-                  <Loader2 className="w-5 h-5 animate-spin ml-auto" />
-                )}
-              </button>
-
-              <button
-                onClick={() => handleDownloadCSV('tickets')}
-                disabled={generating === 'tickets'}
-                className="flex items-center gap-4 p-4 bg-[#F8F7FA] rounded-lg hover:bg-[#E6E5E8] transition-colors disabled:opacity-50"
-              >
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <FileSpreadsheet className="w-5 h-5 text-orange-600" />
-                </div>
-                <div className="text-left">
-                  <p className="font-medium text-[#39364F]">Tickets Export</p>
-                  <p className="text-sm text-[#6F7287]">Download all tickets data</p>
-                </div>
-                {generating === 'tickets' && (
-                  <Loader2 className="w-5 h-5 animate-spin ml-auto" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Generated Reports */}
-        <div className="bg-white rounded-xl shadow-sm">
-          <div className="p-6 border-b border-[#E6E5E8]">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-[#1E0A3C]">Report Templates</h2>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-4 py-2 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
-              >
-                <option value="all">All Types</option>
-                <option value="overview">Overview</option>
-                <option value="revenue">Revenue</option>
-                <option value="events">Events</option>
-                <option value="users">Users</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reportTemplates
-                .filter(t => typeFilter === 'all' || t.id === typeFilter || (typeFilter === 'overview' && t.id === 'overview'))
-                .map((template) => (
-                  <div
-                    key={template.id}
-                    className="flex items-center justify-between p-4 bg-[#F8F7FA] rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 ${template.color} rounded-lg flex items-center justify-center`}>
-                        <template.icon className="w-6 h-6" />
+        ) : (
+          <div className="space-y-6">
+            {/* Overview Tab */}
+            {activeTab === 'overview' && reportData && (
+              <>
+                {/* Overview Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-[#6F7287]">Total Users</p>
+                          <p className="text-2xl font-bold text-[#1E0A3C]">{reportData.overview?.total_users || 0}</p>
+                        </div>
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Users className="w-6 h-6 text-blue-600" />
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-medium text-[#39364F]">{template.name}</h3>
-                        <p className="text-sm text-[#6F7287]">{template.description}</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-[#6F7287]">Total Events</p>
+                          <p className="text-2xl font-bold text-[#1E0A3C]">{reportData.overview?.total_events || 0}</p>
+                        </div>
+                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <Calendar className="w-6 h-6 text-purple-600" />
+                        </div>
                       </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleDownloadPDF(template.id)}
-                      disabled={generating === template.id}
-                    >
-                      {generating === template.id ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4 mr-2" />
-                      )}
-                      PDF
-                    </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-[#6F7287]">Tickets Sold</p>
+                          <p className="text-2xl font-bold text-[#1E0A3C]">{reportData.overview?.total_tickets_sold || 0}</p>
+                        </div>
+                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-green-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-[#6F7287]">Total Revenue</p>
+                          <p className="text-2xl font-bold text-[#1E0A3C]">KES {Number(reportData.overview?.total_revenue || 0).toLocaleString()}</p>
+                        </div>
+                        <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <DollarSign className="w-6 h-6 text-orange-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Revenue Stats */}
+                {reportData.revenue && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5" />
+                        Revenue Overview
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-[#6F7287]">Total Revenue</p>
+                          <p className="text-xl font-bold text-[#1E0A3C]">KES {Number(reportData.revenue.total_revenue || 0).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-[#6F7287]">Transactions</p>
+                          <p className="text-xl font-bold text-[#1E0A3C]">{reportData.revenue.transaction_count || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-[#6F7287]">Avg Transaction</p>
+                          <p className="text-xl font-bold text-[#1E0A3C]">KES {Number(reportData.revenue.average_transaction || 0).toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Role Distribution */}
+                {reportData.users?.role_distribution && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <PieChart className="w-5 h-5" />
+                        User Role Distribution
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {Object.entries(reportData.users.role_distribution).map(([role, count]) => (
+                          <div key={role} className="text-center p-4 bg-[#F8F7FA] rounded-lg">
+                            <p className="text-2xl font-bold text-[#1E0A3C]">{count}</p>
+                            <p className="text-sm text-[#6F7287]">{role}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+
+            {/* Events Tab */}
+            {activeTab === 'events' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Events Performance ({eventsData.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4">Event</th>
+                          <th className="text-left py-3 px-4">Status</th>
+                          <th className="text-right py-3 px-4">Tickets</th>
+                          <th className="text-right py-3 px-4">Sold</th>
+                          <th className="text-right py-3 px-4">Revenue</th>
+                          <th className="text-right py-3 px-4">Occupancy</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {eventsData.map((event) => (
+                          <tr key={event.id} className="border-b hover:bg-[#F8F7FA]">
+                            <td className="py-3 px-4">
+                              <p className="font-medium text-[#1E0A3C]">{event.title}</p>
+                              <p className="text-xs text-[#6F7287]">{event.venue || 'No venue'}</p>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                event.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 
+                                event.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {event.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">{event.total_tickets}</td>
+                            <td className="py-3 px-4 text-right">{event.sold_tickets}</td>
+                            <td className="py-3 px-4 text-right">KES {Number(event.revenue || 0).toLocaleString()}</td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-[#F05537]" 
+                                    style={{ width: `${event.occupancy_rate}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs">{Number(event.occupancy_rate || 0).toFixed(1)}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {eventsData.length === 0 && (
+                      <p className="text-center text-[#6F7287] py-8">No events found with current filters</p>
+                    )}
                   </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      </div>
+                </CardContent>
+              </Card>
+            )}
 
-      {/* Generate Report Modal */}
-      {showGenerateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-[#1E0A3C] mb-4">Generate Report</h2>
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-[#39364F] mb-2">Report Type</label>
-                <select
-                  value={reportType}
-                  onChange={(e) => setReportType(e.target.value)}
-                  className="w-full px-4 py-3 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
-                >
-                  <option value="overview">Platform Overview</option>
-                  <option value="revenue">Revenue Report</option>
-                  <option value="events">Event Performance</option>
-                  <option value="users">User Analytics</option>
-                  <option value="full">Full Report</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#39364F] mb-2">Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-4 py-3 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#39364F] mb-2">End Date</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-4 py-3 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#39364F] mb-2">Format</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="format"
-                      value="pdf"
-                      checked={format === 'pdf'}
-                      onChange={(e) => setFormat(e.target.value)}
-                      className="text-[#F05537]"
-                    />
-                    <span>PDF</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="format"
-                      value="csv"
-                      checked={format === 'csv'}
-                      onChange={(e) => setFormat(e.target.value)}
-                      className="text-[#F05537]"
-                    />
-                    <span>CSV</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowGenerateModal(false)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleGenerateReport}
-                disabled={generating !== null}
-                className="flex-1 bg-[#F05537] hover:bg-[#D94E32]"
-              >
-                {generating !== null ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Generate
-                  </>
-                )}
-              </Button>
-            </div>
+            {/* Users Tab */}
+            {activeTab === 'users' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    User Analytics ({usersData.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4">User</th>
+                          <th className="text-left py-3 px-4">Role</th>
+                          <th className="text-left py-3 px-4">Verified</th>
+                          <th className="text-right py-3 px-4">Tickets</th>
+                          <th className="text-right py-3 px-4">Total Spent</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {usersData.map((user) => (
+                          <tr key={user.id} className="border-b hover:bg-[#F8F7FA]">
+                            <td className="py-3 px-4">
+                              <p className="font-medium text-[#1E0A3C]">{user.name}</p>
+                              <p className="text-xs text-[#6F7287]">{user.email}</p>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-1 bg-gray-100 rounded-full text-xs">
+                                {user.role}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              {user.is_verified ? (
+                                <span className="text-green-600">✓ Yes</span>
+                              ) : (
+                                <span className="text-red-600">✗ No</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-right">{user.total_tickets}</td>
+                            <td className="py-3 px-4 text-right">KES {Number(user.total_spent || 0).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {usersData.length === 0 && (
+                      <p className="text-center text-[#6F7287] py-8">No users found with current filters</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Revenue Tab */}
+            {activeTab === 'revenue' && reportData?.revenue && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    Revenue Report
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="p-4 bg-[#F8F7FA] rounded-lg">
+                      <p className="text-sm text-[#6F7287]">Total Revenue</p>
+                      <p className="text-2xl font-bold text-[#1E0A3C]">KES {Number(reportData.revenue.total_revenue || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="p-4 bg-[#F8F7FA] rounded-lg">
+                      <p className="text-sm text-[#6F7287]">Transactions</p>
+                      <p className="text-2xl font-bold text-[#1E0A3C]">{reportData.revenue.transaction_count || 0}</p>
+                    </div>
+                    <div className="p-4 bg-[#F8F7FA] rounded-lg">
+                      <p className="text-sm text-[#6F7287]">Average</p>
+                      <p className="text-2xl font-bold text-[#1E0A3C]">KES {Number(reportData.revenue.average_transaction || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="p-4 bg-[#F8F7FA] rounded-lg">
+                      <p className="text-sm text-[#6F7287]">Tickets Sold</p>
+                      <p className="text-2xl font-bold text-[#1E0A3C]">{reportData.overview?.total_tickets_sold || 0}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
