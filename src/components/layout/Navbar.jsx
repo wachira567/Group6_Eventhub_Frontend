@@ -23,7 +23,12 @@ const Navbar = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/events?search=${encodeURIComponent(searchQuery)}`);
+      const params = new URLSearchParams();
+      params.set('search', searchQuery);
+      if (location.trim()) {
+        params.set('location', location);
+      }
+      navigate(`/events?${params.toString()}`);
     }
   };
 

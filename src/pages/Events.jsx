@@ -26,7 +26,7 @@ const Events = () => {
       setError(null);
       
       try {
-        // Build query parameters
+        // Build query parameters for backend
         const params = new URLSearchParams();
         
         // Always filter out past events - show only upcoming events
@@ -35,19 +35,14 @@ const Events = () => {
         params.set('start_date_from', today.toISOString().split('T')[0]);
         
         if (searchQuery) {
-          params.set('search', searchQuery);
+          params.set('q', searchQuery);
         }
         
         if (locationFilter) {
           params.set('city', locationFilter);
         }
         
-        if (categoryFilter) {
-          params.set('category', categoryFilter);
-        }
-        
-        // Note: The backend doesn't have a price filter, but we can handle it client-side
-        // if needed after fetching the data
+        // Note: Category filtering is done client-side since backend expects integer IDs
         
         const queryString = params.toString();
         const url = `${API_BASE_URL}/events${queryString ? `?${queryString}` : ''}`;
@@ -61,11 +56,24 @@ const Events = () => {
         const data = await response.json();
         let fetchedEvents = data.events || [];
         
-        // Handle price filtering client-side since backend doesn't support it
+        // Apply filters client-side
+        
+        // Category filter
+        if (categoryFilter) {
+          const categoryObj = CATEGORIES.find(c => c.id === categoryFilter);
+          if (categoryObj) {
+            fetchedEvents = fetchedEvents.filter(event => 
+              event.category && 
+              (event.category.toLowerCase() === categoryObj.name.toLowerCase() || 
+               event.category.toLowerCase() === categoryFilter.toLowerCase())
+            );
+          }
+        }
+        
+        // Price filter
         if (priceFilter) {
           if (priceFilter === 'free') {
             fetchedEvents = fetchedEvents.filter(event => {
-              // Check if event has a minimum price of 0 or is free
               const minPrice = event.ticket_types?.length > 0 
                 ? Math.min(...event.ticket_types.map(tt => tt.price || 0))
                 : event.price || 0;
@@ -77,6 +85,45 @@ const Events = () => {
                 ? Math.min(...event.ticket_types.map(tt => tt.price || 0))
                 : event.price || 0;
               return minPrice > 0;
+            });
+          }
+        }
+        
+        // Date filter
+        if (dateFilter) {
+          if (dateFilter === 'today') {
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            fetchedEvents = fetchedEvents.filter(event => {
+              const eventDate = new Date(event.start_date);
+              return eventDate >= today && eventDate < tomorrow;
+            });
+          } else if (dateFilter === 'tomorrow') {
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dayAfter = new Date(tomorrow);
+            dayAfter.setDate(dayAfter.getDate() + 1);
+            fetchedEvents = fetchedEvents.filter(event => {
+              const eventDate = new Date(event.start_date);
+              return eventDate >= tomorrow && eventDate < dayAfter;
+            });
+          } else if (dateFilter === 'weekend') {
+            const dayOfWeek = today.getDay();
+            const daysToSaturday = (6 - dayOfWeek + 7) % 7;
+            const saturday = new Date(today);
+            saturday.setDate(saturday.getDate() + daysToSaturday);
+            const sunday = new Date(saturday);
+            sunday.setDate(sunday.getDate() + 1);
+            fetchedEvents = fetchedEvents.filter(event => {
+              const eventDate = new Date(event.start_date);
+              return eventDate >= saturday && eventDate < sunday;
+            });
+          } else if (dateFilter === 'week') {
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            fetchedEvents = fetchedEvents.filter(event => {
+              const eventDate = new Date(event.start_date);
+              return eventDate >= today && eventDate < nextWeek;
             });
           }
         }
@@ -119,7 +166,7 @@ const Events = () => {
     };
 
     fetchEvents();
-  }, [searchQuery, locationFilter, categoryFilter, priceFilter]);
+  }, [searchQuery, locationFilter, categoryFilter, priceFilter, dateFilter]);
 
   const updateFilter = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
