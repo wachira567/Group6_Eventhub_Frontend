@@ -2,7 +2,7 @@
 
 A React-based frontend for the EventHub event ticketing and management platform, built with Vite.
 
-### FRontend Vercel Url Link
+### Frontend Vercel Url Link
 https://eventhub-rouge-delta.vercel.app/
 
 ## 🚀 Quick Start
