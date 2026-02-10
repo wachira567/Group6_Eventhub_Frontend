@@ -200,8 +200,8 @@ const TicketPurchaseModal = ({ isOpen, onClose, event, onPurchaseSuccess }) => {
           guestName,
         );
       } else {
-        // Explicitly send is_guest_checkout=false for authenticated users
-        // This ensures the backend knows this is NOT a guest checkout
+        // Explicitly send is_guest_check users
+        //out=false for authenticated This ensures the backend knows this is NOT a guest checkout
         body.is_guest_checkout = false;
         console.log(
           "Authenticated user checkout - isGuestCheckout:",
@@ -332,7 +332,7 @@ const TicketPurchaseModal = ({ isOpen, onClose, event, onPurchaseSuccess }) => {
 
   // Poll for payment status
   const startPolling = useCallback(
-    (checkoutId) => {
+    async (checkoutId) => {
       let pollCount = 0;
       const maxPolls = 24; // 2 minutes (5 seconds * 24)
 
@@ -356,17 +356,48 @@ const TicketPurchaseModal = ({ isOpen, onClose, event, onPurchaseSuccess }) => {
             if (status === "completed" || paymentCompleted === true) {
               clearInterval(pollInterval);
               setPollingInterval(null);
-              setStep("success");
 
-              // Call success callback if provided
-              if (onPurchaseSuccess) {
-                onPurchaseSuccess();
-              }
+              // Call confirm-payment to create tickets and send email
+              try {
+                const headers = {
+                  "Content-Type": "application/json",
+                };
+                if (token) {
+                  headers["Authorization"] = `Bearer ${token}`;
+                }
 
-              // Redirect immediately for authenticated users
-              if (isAuthenticated) {
-                onClose();
-                navigate("/attendee/tickets");
+                const confirmResponse = await fetch(
+                  `${API_BASE_URL}/tickets/confirm-payment`,
+                  {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify({
+                      checkout_request_id: checkoutId,
+                      payment_method: "mpesa",
+                    }),
+                  },
+                );
+
+                if (confirmResponse.ok) {
+                  setStep("success");
+
+                  // Call success callback if provided
+                  if (onPurchaseSuccess) {
+                    onPurchaseSuccess();
+                  }
+
+                  // Redirect immediately for authenticated users
+                  if (isAuthenticated) {
+                    onClose();
+                    navigate("/attendee/tickets");
+                  }
+                } else {
+                  const errorData = await confirmResponse.json();
+                  setError(errorData.error || "Failed to confirm payment");
+                }
+              } catch (err) {
+                console.error("Confirm payment error:", err);
+                setError("Failed to confirm payment");
               }
             } else if (status === "failed" || status === "cancelled") {
               clearInterval(pollInterval);
@@ -1123,8 +1154,8 @@ const TicketPurchaseModal = ({ isOpen, onClose, event, onPurchaseSuccess }) => {
                 <p className="text-sm font-medium text-amber-800 mb-2">
                   📱 Your Ticket
                 </p>
-                <p className="text-sm text-amber-700">
-                  A PDF ticket with a QR code has been sent to your email.
+                <p className="text-700">
+                  A PDF ticket with a QR code has been sent to your-sm text-amber email.
                   Please present it at the event entrance for scanning.
                 </p>
               </div>
