@@ -89,52 +89,70 @@ const Navbar = () => {
   const navLinks = getRoleBasedLinks();
   const dropdownItems = getDropdownItems();
 
+  // Check if user is admin or organizer (hide search and Find Events for them)
+  const isAdminOrOrganizer = user && (user.role === ROLES.ADMIN || user.role === ROLES.ORGANIZER);
+
+  // Get logo link based on role
+  const getLogoLink = () => {
+    if (isAdminOrOrganizer) {
+      return getDashboardLink();
+    }
+    return '/';
+  };
+
+  // Filter nav links to hide Find Events for admin/organizer
+  const filteredNavLinks = isAdminOrOrganizer 
+    ? navLinks.filter(link => link.name !== 'Find Events')
+    : navLinks;
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-[#E6E5E8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-[72px]">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+          <Link to={getLogoLink()} className="flex items-center gap-2 flex-shrink-0">
             <div className="w-8 h-8 bg-[#F05537] rounded-lg flex items-center justify-center">
               <Ticket className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-[#1E0A3C]">EventHub</span>
           </Link>
 
-          {/* Search Bar - Desktop */}
-          <div className="hidden lg:flex flex-1 max-w-2xl mx-8">
-            <form onSubmit={handleSearch} className="flex w-full">
-              <div className="flex-1 flex items-center bg-white border border-[#D2D2D6] rounded-l-lg px-4 py-2.5 focus-within:border-[#F05537] focus-within:ring-1 focus-within:ring-[#F05537]">
-                <Search className="w-5 h-5 text-[#6F7287] mr-3" />
-                <input
-                  type="text"
-                  placeholder="Search events"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent outline-none text-[#39364F] placeholder-[#A9A8B3]"
-                />
-              </div>
-              <div className="flex items-center bg-white border-y border-r border-[#D2D2D6] px-4 py-2.5">
-                <MapPin className="w-5 h-5 text-[#6F7287] mr-2" />
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-24 bg-transparent outline-none text-[#39364F] text-sm"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-[#F05537] hover:bg-[#D94E32] text-white px-6 py-2.5 rounded-r-lg transition-colors"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </form>
-          </div>
+          {/* Search Bar - Desktop (hidden for admin/organizer) */}
+          {!isAdminOrOrganizer && (
+            <div className="hidden lg:flex flex-1 max-w-2xl mx-8">
+              <form onSubmit={handleSearch} className="flex w-full">
+                <div className="flex-1 flex items-center bg-white border border-[#D2D2D6] rounded-l-lg px-4 py-2.5 focus-within:border-[#F05537] focus-within:ring-1 focus-within:ring-[#F05537]">
+                  <Search className="w-5 h-5 text-[#6F7287] mr-3" />
+                  <input
+                    type="text"
+                    placeholder="Search events"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 bg-transparent outline-none text-[#39364F] placeholder-[#A9A8B3]"
+                  />
+                </div>
+                <div className="flex items-center bg-white border-y border-r border-[#D2D2D6] px-4 py-2.5">
+                  <MapPin className="w-5 h-5 text-[#6F7287] mr-2" />
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-24 bg-transparent outline-none text-[#39364F] text-sm"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-[#F05537] hover:bg-[#D94E32] text-white px-6 py-2.5 rounded-r-lg transition-colors"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6">
-            {navLinks.map((link) => (
+            {filteredNavLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.href}
@@ -224,36 +242,40 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="lg:hidden bg-white border-t border-[#E6E5E8]">
           <div className="px-4 py-4 space-y-4">
-            {/* Mobile Search */}
-            <form onSubmit={handleSearch} className="flex">
-              <div className="flex-1 flex items-center bg-[#F8F7FA] border border-[#D2D2D6] rounded-l-lg px-4 py-3">
-                <Search className="w-5 h-5 text-[#6F7287] mr-3" />
-                <input
-                  type="text"
-                  placeholder="Search events"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent outline-none text-[#39364F]"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-[#F05537] hover:bg-[#D94E32] text-white px-4 rounded-r-lg"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </form>
+            {/* Mobile Search (hidden for admin/organizer) */}
+            {!isAdminOrOrganizer && (
+              <form onSubmit={handleSearch} className="flex">
+                <div className="flex-1 flex items-center bg-[#F8F7FA] border border-[#D2D2D6] rounded-l-lg px-4 py-3">
+                  <Search className="w-5 h-5 text-[#6F7287] mr-3" />
+                  <input
+                    type="text"
+                    placeholder="Search events"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 bg-transparent outline-none text-[#39364F]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-[#F05537] hover:bg-[#D94E32] text-white px-4 rounded-r-lg"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+              </form>
+            )}
 
-            {/* Mobile Nav Links */}
+            {/* Mobile Nav Links (Find Events hidden for admin/organizer) */}
             <div className="space-y-2">
-              <Link
-                to="/events"
-                className="flex items-center gap-3 px-4 py-3 text-[#39364F] hover:bg-[#F8F7FA] rounded-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Search className="w-5 h-5" />
-                Find Events
-              </Link>
+              {!isAdminOrOrganizer && (
+                <Link
+                  to="/events"
+                  className="flex items-center gap-3 px-4 py-3 text-[#39364F] hover:bg-[#F8F7FA] rounded-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Search className="w-5 h-5" />
+                  Find Events
+                </Link>
+              )}
               
               {isAuthenticated && (user?.role === ROLES.ORGANIZER || user?.role === ROLES.ADMIN) && (
                 <Link

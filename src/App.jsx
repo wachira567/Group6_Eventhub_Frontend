@@ -1,46 +1,49 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Provider } from 'react-redux'
-import { store } from './store/store'
-import { Toaster } from 'sonner'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./store/store";
+import { Toaster } from "sonner";
 
 // Layout
-import Navbar from './components/layout/Navbar'
-import Footer from './components/layout/Footer'
+import Navbar from "./components/layout/Navbar";
+import Footer from "./components/layout/Footer";
 
 // Pages
-import Home from './pages/Home'
-import Events from './pages/Events'
-import EventDetail from './pages/EventDetail'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import VerifyEmail from './pages/VerifyEmail'
-import CreateEvent from './pages/CreateEvent'
+import Home from "./pages/Home";
+import Events from "./pages/Events";
+import EventDetail from "./pages/EventDetail";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import CreateEvent from "./pages/CreateEvent";
 
 // Protected Routes
-import ProtectedRoute from './components/common/ProtectedRoute'
+import ProtectedRoute from "./components/common/ProtectedRoute";
 
 // Role-based pages
-import AttendeeDashboard from './pages/attendee/Dashboard'
-import MyTickets from './pages/attendee/MyTickets'
-import SavedEvents from './pages/attendee/SavedEvents'
-import AttendeeSettings from './pages/attendee/Settings'
+import AttendeeDashboard from "./pages/attendee/Dashboard";
+import MyTickets from "./pages/attendee/MyTickets";
+import SavedEvents from "./pages/attendee/SavedEvents";
+import AttendeeSettings from "./pages/attendee/Settings";
 
-import OrganizerDashboard from './pages/organizer/Dashboard'
-import OrganizerMyEvents from './pages/organizer/MyEvents'
-import OrganizerCreateEvent from './pages/organizer/CreateEvent'
-import OrganizerEditEvent from './pages/organizer/EditEvent'
-import OrganizerEventAnalytics from './pages/organizer/EventAnalytics'
-import AttendeeList from './pages/organizer/AttendeeList'
-import OrganizerTicketScanner from './pages/organizer/TicketScanner'
-import OrganizerSettings from './pages/organizer/Settings'
+import OrganizerDashboard from "./pages/organizer/Dashboard";
+import OrganizerMyEvents from "./pages/organizer/MyEvents";
+import OrganizerCreateEvent from "./pages/organizer/CreateEvent";
+import OrganizerEditEvent from "./pages/organizer/EditEvent";
+import OrganizerEventAnalytics from "./pages/organizer/EventAnalytics";
+import AttendeeList from "./pages/organizer/AttendeeList";
+import OrganizerTicketScanner from "./pages/organizer/TicketScanner";
+import OrganizerTicketManualSearch from "./pages/organizer/TicketManualSearch";
+import OrganizerSettings from "./pages/organizer/Settings";
 
-import AdminDashboard from './pages/admin/Dashboard'
-import UserManagement from './pages/admin/UserManagement'
-import EventModeration from './pages/admin/EventModeration'
-import PlatformAnalytics from './pages/admin/PlatformAnalytics'
-import Reports from './pages/admin/Reports'
+import AdminDashboard from "./pages/admin/Dashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import EventModeration from "./pages/admin/EventModeration";
+import PlatformAnalytics from "./pages/admin/PlatformAnalytics";
+import Reports from "./pages/admin/Reports";
 
-import './App.css'
+import "./App.css";
 
 function App() {
   return (
@@ -57,12 +60,14 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
-              
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+
               {/* Protected Routes - Any authenticated user */}
               <Route
                 path="/create-event"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer', 'admin']}>
+                  <ProtectedRoute allowedRoles={["organizer", "admin"]}>
                     <CreateEvent />
                   </ProtectedRoute>
                 }
@@ -72,7 +77,7 @@ function App() {
               <Route
                 path="/attendee"
                 element={
-                  <ProtectedRoute allowedRoles={['attendee']}>
+                  <ProtectedRoute allowedRoles={["attendee"]}>
                     <AttendeeDashboard />
                   </ProtectedRoute>
                 }
@@ -80,7 +85,7 @@ function App() {
               <Route
                 path="/attendee/tickets"
                 element={
-                  <ProtectedRoute allowedRoles={['attendee']}>
+                  <ProtectedRoute allowedRoles={["attendee"]}>
                     <MyTickets />
                   </ProtectedRoute>
                 }
@@ -88,7 +93,7 @@ function App() {
               <Route
                 path="/attendee/saved"
                 element={
-                  <ProtectedRoute allowedRoles={['attendee']}>
+                  <ProtectedRoute allowedRoles={["attendee"]}>
                     <SavedEvents />
                   </ProtectedRoute>
                 }
@@ -96,7 +101,7 @@ function App() {
               <Route
                 path="/attendee/settings"
                 element={
-                  <ProtectedRoute allowedRoles={['attendee']}>
+                  <ProtectedRoute allowedRoles={["attendee"]}>
                     <AttendeeSettings />
                   </ProtectedRoute>
                 }
@@ -106,7 +111,7 @@ function App() {
               <Route
                 path="/organizer"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer']}>
+                  <ProtectedRoute allowedRoles={["organizer"]}>
                     <OrganizerDashboard />
                   </ProtectedRoute>
                 }
@@ -114,7 +119,7 @@ function App() {
               <Route
                 path="/organizer/my-events"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer']}>
+                  <ProtectedRoute allowedRoles={["organizer"]}>
                     <OrganizerMyEvents />
                   </ProtectedRoute>
                 }
@@ -122,7 +127,7 @@ function App() {
               <Route
                 path="/organizer/create-event"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer']}>
+                  <ProtectedRoute allowedRoles={["organizer"]}>
                     <OrganizerCreateEvent />
                   </ProtectedRoute>
                 }
@@ -130,7 +135,7 @@ function App() {
               <Route
                 path="/organizer/edit-event/:id"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer']}>
+                  <ProtectedRoute allowedRoles={["organizer"]}>
                     <OrganizerEditEvent />
                   </ProtectedRoute>
                 }
@@ -138,7 +143,7 @@ function App() {
               <Route
                 path="/organizer/analytics/:id"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer']}>
+                  <ProtectedRoute allowedRoles={["organizer"]}>
                     <OrganizerEventAnalytics />
                   </ProtectedRoute>
                 }
@@ -146,7 +151,7 @@ function App() {
               <Route
                 path="/organizer/attendees/:id"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer']}>
+                  <ProtectedRoute allowedRoles={["organizer"]}>
                     <AttendeeList />
                   </ProtectedRoute>
                 }
@@ -154,15 +159,23 @@ function App() {
               <Route
                 path="/organizer/scan-tickets/:eventId"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer']}>
+                  <ProtectedRoute allowedRoles={["organizer"]}>
                     <OrganizerTicketScanner />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/organizer/tickets/:eventId/search"
+                element={
+                  <ProtectedRoute allowedRoles={["organizer"]}>
+                    <OrganizerTicketManualSearch />
                   </ProtectedRoute>
                 }
               />
               <Route
                 path="/organizer/settings"
                 element={
-                  <ProtectedRoute allowedRoles={['organizer']}>
+                  <ProtectedRoute allowedRoles={["organizer"]}>
                     <OrganizerSettings />
                   </ProtectedRoute>
                 }
@@ -172,7 +185,7 @@ function App() {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute allowedRoles={["admin"]}>
                     <AdminDashboard />
                   </ProtectedRoute>
                 }
@@ -180,7 +193,7 @@ function App() {
               <Route
                 path="/admin/users"
                 element={
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute allowedRoles={["admin"]}>
                     <UserManagement />
                   </ProtectedRoute>
                 }
@@ -188,7 +201,7 @@ function App() {
               <Route
                 path="/admin/events"
                 element={
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute allowedRoles={["admin"]}>
                     <EventModeration />
                   </ProtectedRoute>
                 }
@@ -196,7 +209,7 @@ function App() {
               <Route
                 path="/admin/analytics"
                 element={
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute allowedRoles={["admin"]}>
                     <PlatformAnalytics />
                   </ProtectedRoute>
                 }
@@ -204,14 +217,19 @@ function App() {
               <Route
                 path="/admin/reports"
                 element={
-                  <ProtectedRoute allowedRoles={['admin']}>
+                  <ProtectedRoute allowedRoles={["admin"]}>
                     <Reports />
                   </ProtectedRoute>
                 }
               />
 
               {/* 404 */}
-              <Route path="*" element={<div className="text-center py-20">Page not found</div>} />
+              <Route
+                path="*"
+                element={
+                  <div className="text-center py-20">Page not found</div>
+                }
+              />
             </Routes>
           </main>
           <Footer />
@@ -219,7 +237,7 @@ function App() {
         </div>
       </Router>
     </Provider>
-  )
+  );
 }
 
-export default App
+export default App;

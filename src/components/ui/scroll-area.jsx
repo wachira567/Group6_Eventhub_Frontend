@@ -9,8 +9,7 @@ function ScrollArea({
   className,
   children,
   ...props
-}
-{
+}{
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"

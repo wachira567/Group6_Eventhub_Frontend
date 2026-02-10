@@ -6,12 +6,41 @@ import { Button } from '../ui/button';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
-const EventMap = ({ coordinates, address, eventTitle, height = '300px' }) => {
+const EventMap = ({ coordinates: initialCoordinates, address, eventTitle, height = '300px' }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [userLocation, setUserLocation] = useState(null);
   const [distance, setDistance] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [coordinates, setCoordinates] = useState(initialCoordinates);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+
+  // Geocode address to coordinates if coordinates are missing
+  useEffect(() => {
+    if (!coordinates && address && !isGeocoding) {
+      geocodeAddress(address);
+    }
+  }, [coordinates, address]);
+
+  const geocodeAddress = async (addr) => {
+    setIsGeocoding(true);
+    try {
+      const encodedAddress = encodeURIComponent(addr);
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${mapboxgl.accessToken}&limit=1`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+        setCoordinates([lng, lat]);
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
 
   useEffect(() => {
     if (!coordinates || map.current) return;
@@ -123,14 +152,26 @@ const EventMap = ({ coordinates, address, eventTitle, height = '300px' }) => {
   };
 
   if (!coordinates) {
+    // Fallback: Show address with Google Maps link
+    const searchAddress = encodeURIComponent(address || 'Nairobi');
     return (
       <div 
-        className="w-full rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center"
+        className="w-full rounded-lg border border-gray-200 bg-gray-50"
         style={{ height }}
       >
-        <div className="text-center text-gray-500">
-          <MapPin className="w-8 h-8 mx-auto mb-2" />
-          <p>No location specified for this event</p>
+        <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+          <MapPin className="w-8 h-8 mx-auto mb-2 text-[#F05537]" />
+          <p className="text-gray-600 text-sm mb-2">Location</p>
+          <p className="text-gray-800 font-medium text-sm mb-3 truncate w-full px-2">{address || 'Address not specified'}</p>
+          <a 
+            href={`https://www.google.com/maps/search/?api=1&query=${searchAddress}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#F05537] hover:text-[#D94E32] text-sm font-medium flex items-center gap-1"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View on Google Maps
+          </a>
         </div>
       </div>
     );

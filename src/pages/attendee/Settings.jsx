@@ -36,7 +36,7 @@ const AttendeeSettings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    // Initialize form with user data
+  // Initialize form with user data
   useEffect(() => {
     if (user) {
       setFormData((prev) => ({
@@ -81,7 +81,7 @@ const AttendeeSettings = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-   const handleChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
@@ -149,7 +149,7 @@ const AttendeeSettings = () => {
     return sidebarItems.find((item) => item.to === location.pathname)?.to || '/attendee';
   };
 
-   return (
+  return (
     <div className="min-h-screen bg-[#F8F7FA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">

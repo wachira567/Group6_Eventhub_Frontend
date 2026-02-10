@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, MapPin, Calendar, X } from 'lucide-react';
 import EventCard from '../components/events/EventCard';
-import TicketPurchaseModal from '../components/tickets/TicketPurchaseModal';
 import { Button } from '../components/ui/button';
 import { CATEGORIES, API_BASE_URL } from '../utils/constants';
 import { Spinner } from '../components/ui/spinner';
@@ -13,24 +12,12 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const searchQuery = searchParams.get('search') || '';
   const locationFilter = searchParams.get('location') || '';
   const categoryFilter = searchParams.get('category') || '';
   const priceFilter = searchParams.get('price') || '';
   const dateFilter = searchParams.get('date') || '';
-
-  const handleOpenModal = (event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedEvent(null);
-  };
 
   // Fetch events from API
   useEffect(() => {
@@ -351,8 +338,7 @@ const Events = () => {
                     {events.map((event) => (
                       <EventCard 
                         key={event.id} 
-                        event={event} 
-                        onGetTickets={handleOpenModal}
+                        event={event}
                       />
                     ))}
                   </div>
@@ -377,13 +363,6 @@ const Events = () => {
           </div>
         </div>
       </div>
-
-      {/* Ticket Purchase Modal */}
-      <TicketPurchaseModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        event={selectedEvent}
-      />
     </div>
   );
 };

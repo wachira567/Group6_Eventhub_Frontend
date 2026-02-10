@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Heart, Calendar, MapPin, ChevronLeft, Search, X, Ticket, Loader2 } from 'lucide-react';
+import { Heart, Calendar, MapPin, ChevronLeft, Search, X, Ticket, Loader2, User, Settings } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { formatDate, formatCurrency } from '../../utils/helpers';
 import { API_BASE_URL } from '../../utils/constants';
 
 const sidebarItems = [
-  { to: '/attendee', icon: Ticket, label: 'Overview', active: false },
+  { to: '/attendee', icon: User, label: 'Overview', active: false },
   { to: '/attendee/tickets', icon: Ticket, label: 'My Tickets', active: false },
   { to: '/attendee/saved', icon: Heart, label: 'Saved Events', active: true },
+  { to: '/attendee/settings', icon: Settings, label: 'Settings', active: false },
 ];
 
 const SavedEvents = () => {
@@ -69,7 +70,7 @@ const SavedEvents = () => {
         throw new Error('Failed to remove saved event');
       }
 
-            // Remove from local state
+      // Remove from local state
       setSavedEvents(savedEvents.filter((event) => event.id !== eventId));
     } catch (err) {
       console.error('Error removing saved event:', err);
@@ -79,7 +80,7 @@ const SavedEvents = () => {
     }
   };
 
-   const filteredEvents = savedEvents.filter(
+  const filteredEvents = savedEvents.filter(
     (event) =>
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -97,7 +98,7 @@ const SavedEvents = () => {
     );
   }
 
-   return (
+  return (
     <div className="min-h-screen bg-[#F8F7FA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Link */}
@@ -271,5 +272,3 @@ const SavedEvents = () => {
 };
 
 export default SavedEvents;
-
-

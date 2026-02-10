@@ -19,7 +19,7 @@ const EventModeration = () => {
   const fetchPendingEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/moderation/events/pending`, {
+      const response = await fetch(`${API_BASE_URL}/moderation/pending`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -27,6 +27,7 @@ const EventModeration = () => {
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Token expired or invalid - redirect to login
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/login';
@@ -51,7 +52,7 @@ const EventModeration = () => {
   const handleApprove = async (eventId) => {
     setActionLoading(eventId);
     try {
-      const response = await fetch(`${API_BASE_URL}/moderation/events/${eventId}/approve`, {
+      const response = await fetch(`${API_BASE_URL}/moderation/event/${eventId}/approve`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -61,6 +62,7 @@ const EventModeration = () => {
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Token expired or invalid - redirect to login
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/login';
@@ -84,7 +86,7 @@ const EventModeration = () => {
 
     setActionLoading(eventId);
     try {
-      const response = await fetch(`${API_BASE_URL}/moderation/events/${eventId}/reject`, {
+      const response = await fetch(`${API_BASE_URL}/moderation/event/${eventId}/reject`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -95,6 +97,7 @@ const EventModeration = () => {
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Token expired or invalid - redirect to login
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/login';
@@ -117,14 +120,17 @@ const EventModeration = () => {
       event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.organizer?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.organizer?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Status filter - show only matching status
     const matchesStatus = statusFilter === 'all' || event.status?.toLowerCase() === statusFilter;
+    
     return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status) => {
     const badges = {
       published: 'bg-green-100 text-green-700',
-      pending_approval: 'bg-orange-100 text-orange-700',
+      pending: 'bg-orange-100 text-orange-700',
       rejected: 'bg-red-100 text-red-700',
       draft: 'bg-gray-100 text-gray-700',
       cancelled: 'bg-red-50 text-red-600',
@@ -137,7 +143,7 @@ const EventModeration = () => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const pendingCount = events.filter(e => e.status?.toLowerCase() === 'pending_approval').length;
+  const pendingCount = events.filter(e => ['draft', 'pending'].includes(e.status?.toLowerCase())).length;
 
   if (loading) {
     return (
@@ -191,7 +197,8 @@ const EventModeration = () => {
                 className="px-4 py-2 border border-[#D2D2D6] rounded-lg focus:ring-2 focus:ring-[#F05537] outline-none"
               >
                 <option value="all">All Status</option>
-                <option value="pending_approval">Pending Approval</option>
+                <option value="draft">Draft</option>
+                <option value="pending">Pending Approval</option>
                 <option value="published">Published</option>
                 <option value="rejected">Rejected</option>
               </select>
@@ -271,7 +278,7 @@ const EventModeration = () => {
                       )}
 
                       {/* Actions */}
-                      {event.status?.toLowerCase() === 'pending_approval' && (
+                      {['draft', 'pending'].includes(event.status?.toLowerCase()) && (
                         <div className="flex gap-3">
                           <Button
                             onClick={() => handleApprove(event.id)}
@@ -307,7 +314,7 @@ const EventModeration = () => {
                         </div>
                       )}
 
-                      {event.status?.toLowerCase() !== 'pending_approval' && (
+                      {!['draft', 'pending'].includes(event.status?.toLowerCase()) && (
                         <div className="flex gap-3">
                           <Link to={`/events/${event.id}`}>
                             <Button variant="outline">

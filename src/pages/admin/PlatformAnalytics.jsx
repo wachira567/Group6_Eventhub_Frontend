@@ -28,7 +28,7 @@ const PlatformAnalytics = () => {
         }
 
         const data = await response.json();
-        setAnalytics(data);
+        setAnalytics(data.stats || data);
       } catch (err) {
         console.error('Error fetching analytics:', err);
         setError(err.message);
@@ -83,9 +83,9 @@ const PlatformAnalytics = () => {
                 </div>
                 <p className="text-sm text-[#6F7287]">Total Users</p>
               </div>
-              <p className="text-2xl font-bold text-[#1E0A3C]">{analytics.overview.total_users?.toLocaleString() || 0}</p>
+              <p className="text-2xl font-bold text-[#1E0A3C]">{analytics?.users?.total?.toLocaleString() || 0}</p>
               <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                <ArrowUp className="w-3 h-3" /> +{analytics.overview.new_users_week || 0} this week
+                <ArrowUp className="w-3 h-3" /> +{analytics?.users?.new || 0} new
               </p>
             </div>
 
@@ -96,9 +96,9 @@ const PlatformAnalytics = () => {
                 </div>
                 <p className="text-sm text-[#6F7287]">Total Events</p>
               </div>
-              <p className="text-2xl font-bold text-[#1E0A3C]">{analytics.overview.total_events || 0}</p>
+              <p className="text-2xl font-bold text-[#1E0A3C]">{analytics?.events?.total || 0}</p>
               <p className="text-xs text-[#6F7287] mt-1">
-                {analytics.overview.published_events || 0} published
+                {analytics?.events?.published || 0} published
               </p>
             </div>
 
@@ -109,7 +109,7 @@ const PlatformAnalytics = () => {
                 </div>
                 <p className="text-sm text-[#6F7287]">Revenue</p>
               </div>
-              <p className="text-2xl font-bold text-[#1E0A3C]">{formatCurrency(analytics.overview.revenue || 0)}</p>
+              <p className="text-2xl font-bold text-[#1E0A3C]">{formatCurrency(analytics?.revenue?.total || 0)}</p>
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -119,7 +119,7 @@ const PlatformAnalytics = () => {
                 </div>
                 <p className="text-sm text-[#6F7287]">Tickets Sold</p>
               </div>
-              <p className="text-2xl font-bold text-[#1E0A3C]">{analytics.overview.completed_tickets?.toLocaleString() || 0}</p>
+              <p className="text-2xl font-bold text-[#1E0A3C]">{analytics?.tickets?.total_valid?.toLocaleString() || 0}</p>
             </div>
           </div>
         )}
