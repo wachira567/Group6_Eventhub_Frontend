@@ -143,9 +143,10 @@ const CreateEvent = () => {
         tags: formData.tags,
         venue: formData.location,
         address: formData.address,
+
         city: formData.address.split(',').pop()?.trim() || formData.location,
-        latitude: formData.coordinates?.lat,
-        longitude: formData.coordinates?.lng,
+        latitude: formData.coordinates ? formData.coordinates[1] : null,
+        longitude: formData.coordinates ? formData.coordinates[0] : null,
         image_url: formData.imageUrl,
         start_date: startDateTime.toISOString(),
         end_date: endDateTime.toISOString(),
