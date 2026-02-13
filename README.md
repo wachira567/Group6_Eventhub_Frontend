@@ -5,6 +5,9 @@ A React-based frontend for the EventHub event ticketing and management platform,
 ### Frontend Vercel Url Link
 https://eventhub-rouge-delta.vercel.app/
 
+### Eventhub Backend Repository
+https://github.com/wachira567/Eventhub_Group_Backend.git
+
 ## 🚀 Quick Start
 
 ### Installation
